@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 //  Predict Age
 const getPredictedAge = async (name: string) => {
 	const res = await fetch(`https://api.agify.io?name=${name}`);
@@ -20,6 +23,7 @@ interface Params {
 	params: { name: string };
 }
 
+// TODO add a transition to the redirect page
 export default async function prediction({ params }: Params) {
 	const ageData = getPredictedAge(params.name);
 	const genderData = getPredictedGender(params.name);
