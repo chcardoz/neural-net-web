@@ -31,12 +31,24 @@ export default async function prediction({ params }: Params) {
 		countryData
 	]);
 	return (
-		<div>
-			<div>
-				<div> Personal Info</div>
-				<div> Age: {age?.age}</div>
-				<div> Gender: {gender?.gender}</div>
-				<div> Country: {country?.country?.[0]?.country_id}</div>
+		<div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-3 p-4">
+			<div className="p-8">
+				<div className="uppercase tracking-wide text-sm text-indigo-500 font-semibold">
+					{" "}
+					Personal Info
+				</div>
+				<div className="block mt-1 text-lg leading-tight font-medium text-black">
+					{" "}
+					Age: {age?.age}
+				</div>
+				<div className="block mt-1 text-lg leading-tight font-medium text-black">
+					{" "}
+					Gender: {gender?.gender}
+				</div>
+				<div className="block mt-1 text-lg leading-tight font-medium text-black">
+					{" "}
+					Country: {country?.country?.[0]?.country_id}
+				</div>
 			</div>
 		</div>
 	);
