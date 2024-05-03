@@ -9,6 +9,7 @@ export class Network extends Component {
 			<div>
 				<Layer />
 				network
+				<Layer />
 			</div>
 		);
 	}

@@ -6,6 +6,7 @@ export class Layer extends Component {
 		return (
 			<div>
 				<Node />
+				<Node />
 				layers
 			</div>
 		);
