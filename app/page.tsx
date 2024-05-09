@@ -1,5 +1,3 @@
-// TODO : Add dynamic graphing capanilties
-
 "use client";
 
 let acorn = require("acorn");
@@ -8,6 +6,12 @@ import { useState, useEffect } from "react";
 export default function Home() {
 	const [message, setMessage] = useState("");
 	const [parseResult, setParseResult] = useState(null);
+	const [graph, setGraph] = useState(null);
+	const [identifier, setIdentifier] = useState(new Set());
+
+	const addIdentifier = (id: string) => {
+		setIdentifier(new Set([...identifier, id]));
+	};
 
 	const handleMessageChange = (e: any) => {
 		setMessage(e.target.value);
@@ -16,8 +20,20 @@ export default function Home() {
 	useEffect(() => {
 		try {
 			setParseResult(acorn.parse(message, { ecmaVersion: 2020 }));
+			console.log("====================================");
+			console.log(parseResult?.body);
+			console.log("====================================");
+			// read thorough and save all identifiers and print it
+			// FIXME : when the first letter typed is an identifier, It is not being recognized. Although pareResult is being updated, the identifier is not being updated.
+			if (parseResult?.body) {
+				for (let i = 0; i < parseResult?.body.length; i++) {
+					addIdentifier(parseResult?.body[i]?.expression?.left?.name);
+				}
+			}
+
+			console.log(identifier);
 		} catch (error) {
-			console.error("Parsing error: OHHHNOOO", error);
+			console.log("Invalid JavaScript code");
 		}
 		console.log(parseResult);
 	}, [message]);
