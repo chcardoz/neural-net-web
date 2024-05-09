@@ -15,14 +15,11 @@ export default function Home() {
 
 	const handleMessageChange = (e: any) => {
 		setMessage(e.target.value);
+		setParseResult(acorn.parse(message, { ecmaVersion: 2020 }));
 	};
 
 	useEffect(() => {
 		try {
-			setParseResult(acorn.parse(message, { ecmaVersion: 2020 }));
-			console.log("====================================");
-			console.log(parseResult?.body);
-			console.log("====================================");
 			// read thorough and save all identifiers and print it
 			// FIXME : when the first letter typed is an identifier, It is not being recognized. Although pareResult is being updated, the identifier is not being updated.
 			if (parseResult?.body) {
@@ -36,7 +33,7 @@ export default function Home() {
 			console.log("Invalid JavaScript code");
 		}
 		console.log(parseResult);
-	}, [message]);
+	}, [parseResult]);
 
 	return (
 		<div className="flex h-screen">
