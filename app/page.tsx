@@ -7,22 +7,31 @@ export default function Home() {
 	const [message, setMessage] = useState("");
 	const [parseResult, setParseResult] = useState(null);
 	const [graph, setGraph] = useState(null);
-	const [identifier, setIdentifier] = useState(new Set());
+	const [identifier, setIdentifier] = useState(new Set<string>());
 
 	const addIdentifier = (id: string) => {
+		if (identifier.length === 0) {
+			setIdentifier(new Set([id]));
+		}
 		setIdentifier(new Set([...identifier, id]));
 	};
 
 	const handleMessageChange = (e: any) => {
 		setMessage(e.target.value);
-		setParseResult(acorn.parse(message, { ecmaVersion: 2020 }));
+		try {
+			setParseResult(acorn.parse(message, { ecmaVersion: 2020 }));
+		} catch (error) {
+			console.error("Invalid JavaScript code");
+		}
+
+		console.log(parseResult);
 	};
 
 	useEffect(() => {
 		try {
 			// read thorough and save all identifiers and print it
 			// FIXME : when the first letter typed is an identifier, It is not being recognized. Although pareResult is being updated, the identifier is not being updated.
-			if (parseResult?.body) {
+			if (parseResult?.body.length > 0) {
 				for (let i = 0; i < parseResult?.body.length; i++) {
 					addIdentifier(parseResult?.body[i]?.expression?.left?.name);
 				}
@@ -32,7 +41,6 @@ export default function Home() {
 		} catch (error) {
 			console.log("Invalid JavaScript code");
 		}
-		console.log(parseResult);
 	}, [parseResult]);
 
 	return (
