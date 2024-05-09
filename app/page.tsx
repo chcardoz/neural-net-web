@@ -36,7 +36,7 @@ export default function Home() {
 			<div className="flex-1 flex flex-col items-start p-4">
 				<div
 					className="bg-gray-200 p-2 rounded text-black overflow-auto w-full h-full"
-					style={{ maxHeight: "100vh" }}
+					style={{ maxHeight: "50vh" }}
 				>
 					<pre>
 						{parseResult
@@ -44,6 +44,10 @@ export default function Home() {
 							: "Invalid JavaScript code"}
 					</pre>{" "}
 				</div>
+				<div
+					className="flex-grow bg-white p-2 rounded text-black overflow-auto w-full h-full"
+					style={{ maxHeight: "50vh", marginBottom: "1rem" }}
+				></div>
 			</div>
 		</div>
 	);
