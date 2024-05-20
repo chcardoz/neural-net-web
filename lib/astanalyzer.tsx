@@ -4,6 +4,7 @@ import {
 	AssignmentExpression,
 	Expression,
 	ExpressionStatement,
+	BinaryExpression,
 	Node
 } from "acorn";
 
@@ -54,15 +55,27 @@ const useASTAnalyzer = () => {
 				const assignmentExpr = exprNode.expression as AssignmentExpression;
 				if (assignmentExpr.type != "AssignmentExpression") return;
 				console.log("Assignment Expression achieved!!");
-			};
 
-			// Evaluate expressions within the AST
-			const evaluateExpression = (expr: Expression) => {
-				if (expr.type == "Literal") {
-					return expr.value;
-				} else if (expr.type == "Identifier") {
-					return identifiers.get(expr.name as string);
-				}
+				const binaryRecurse = (node: BinaryExpression) => {
+					if (
+						(node.left.type == "Literal" || node.left.type == "Identifier") &&
+						(node.right.type == "Literal" || node.right.type == "Identifier")
+					) {
+						console.log("Lowest Binary Expression achieved!!");
+						console.log("====================================");
+						console.log("Left:", node.left);
+						console.log("Right:", node.right);
+						console.log("====================================");
+						return;
+					}
+					if (node.left.type == "BinaryExpression") {
+						binaryRecurse(node.left);
+					}
+				};
+
+				const binaryExpr = assignmentExpr.right as BinaryExpression;
+				binaryRecurse(binaryExpr);
+
 				return null;
 			};
 
