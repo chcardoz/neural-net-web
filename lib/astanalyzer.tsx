@@ -5,10 +5,60 @@ import {
 	Expression,
 	ExpressionStatement,
 	BinaryExpression,
-	Node
+	Node,
+	Literal,
+	Identifier
 } from "acorn";
 
-type IdentifierMap = Map<string, any>;
+/**
+ * Represents a value.
+ */
+class Value {
+	/**
+	 * The name of the value.
+	 * @type {string | null}
+	 */
+	name: string | null;
+
+	/**
+	 * The numeric value.
+	 * @type {number | null}
+	 */
+	value: number | null;
+
+	/**
+	 * The children values.
+	 * @type {Array<Value> | null}
+	 */
+	children: Array<Value> | null;
+
+	/**
+	 * The operation associated with the value.
+	 * @type {string}
+	 */
+	op: string | null;
+
+	/**
+	 * Constructs a new Value object.
+	 * @param {string | null} name - The name of the value.
+	 * @param {number} value - The numeric value.
+	 * @param {Array<Value>} children - The children values.
+	 * @param {string} op - The operation associated with the value.
+	 */
+	constructor(
+		name: string | null,
+		value: number | null,
+		children: Array<Value> | null,
+		op: string | null
+	) {
+		this.name = name;
+		this.value = value;
+		this.children = children;
+		this.op = op;
+	}
+}
+
+type IdentifierMap = Set<Value>;
 type ASTAnalyzerReturnType = {
 	message: string;
 	handleMessageChange: (e: any) => void;
@@ -34,7 +84,9 @@ const useASTAnalyzer = () => {
 	// State variables
 	const [message, setMessage] = useState<string>("");
 	const [parseResult, setParseResult] = useState<Node | null>(null);
-	const [identifierMap, setIdentifierMap] = useState<IdentifierMap>(new Map());
+	const [identifierMap, setIdentifierMap] = useState<IdentifierMap>(
+		new Set<Value>()
+	);
 
 	// Function to handle message changes
 	const handleMessageChange = (e: any) => {
@@ -42,11 +94,16 @@ const useASTAnalyzer = () => {
 		analyzeCode(e.target.value);
 	};
 
+	// Function to handle adding a new Value type to the identifier set
+	const addValue = (newValue: Value) => {
+		setIdentifierMap(new Set<Value>(identifierMap.add(newValue)));
+	};
+
 	// Function to analyze JavaScript code and update states accordingly
 	const analyzeCode = (code: string) => {
 		try {
 			const parsed = acorn.parse(code, { ecmaVersion: 2020 });
-			const identifiers: IdentifierMap = new Map();
+			const identifiers: IdentifierMap = new Set<Value>();
 
 			// Traverse the parsed AST
 			const traverse = (node: any) => {
@@ -61,11 +118,23 @@ const useASTAnalyzer = () => {
 						(node.left.type == "Literal" || node.left.type == "Identifier") &&
 						(node.right.type == "Literal" || node.right.type == "Identifier")
 					) {
-						console.log("Lowest Binary Expression achieved!!");
-						console.log("====================================");
-						console.log("Left:", node.left);
-						console.log("Right:", node.right);
-						console.log("====================================");
+						if (node.left.type == "Literal") {
+							const leftNode = node.left as Literal;
+							addValue(new Value(null, leftNode.raw, null, null));
+						}
+						if (node.left.type == "Identifier") {
+							const leftNode = node.left as Identifier;
+							addValue(new Value(node.left.name, null, null, null));
+						}
+						if (node.right.type == "Literal") {
+							const rightNode = node.right as Literal;
+							addValue(new Value(null, rightNode.raw, null, null));
+						}
+						if (node.right.type == "Identifier") {
+							const rightNode = node.right as Identifier;
+							addValue(new Value(rightNode.name, null, null, null));
+						}
+						console.log(identifierMap);
 						return;
 					}
 					if (node.left.type == "BinaryExpression") {
@@ -76,6 +145,16 @@ const useASTAnalyzer = () => {
 				if (assignmentExpr.right.type == "BinaryExpression") {
 					const binaryExpr = assignmentExpr.right as BinaryExpression;
 					binaryRecurse(binaryExpr);
+				} else {
+					// FIXME : There is a  delay in recognizing the assignment expression and adding to set
+					if (
+						assignmentExpr.left.type == "Identifier" &&
+						assignmentExpr.right.type == "Literal"
+					) {
+						const leftNode = assignmentExpr.left as Identifier;
+						const rightNode = assignmentExpr.right as Literal;
+						addValue(new Value(leftNode.name, rightNode.raw, null, "="));
+					}
 				}
 
 				return null;
@@ -91,7 +170,7 @@ const useASTAnalyzer = () => {
 			console.error("Invalid JavaScript code: ", error);
 			// Reset states on error
 			setParseResult(null);
-			setIdentifierMap(new Map());
+			setIdentifierMap(new Set<Value>());
 		}
 	};
 
