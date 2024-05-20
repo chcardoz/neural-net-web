@@ -3,6 +3,25 @@
 import { useState, useEffect } from "react";
 import useASTAnalyzer from "@/lib/astanalyzer";
 
+class Value {
+	name: string | null;
+	value: number;
+	children: Array<Value>;
+	op: string;
+
+	constructor(
+		name: string | null,
+		value: number,
+		children: Array<Value>,
+		op: string
+	) {
+		this.name = name;
+		this.value = value;
+		this.children = children;
+		this.op = op;
+	}
+}
+
 /**
  * Renders the Home component.
  *
