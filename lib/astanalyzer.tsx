@@ -73,8 +73,10 @@ const useASTAnalyzer = () => {
 					}
 				};
 
-				const binaryExpr = assignmentExpr.right as BinaryExpression;
-				binaryRecurse(binaryExpr);
+				if (assignmentExpr.right.type == "BinaryExpression") {
+					const binaryExpr = assignmentExpr.right as BinaryExpression;
+					binaryRecurse(binaryExpr);
+				}
 
 				return null;
 			};
