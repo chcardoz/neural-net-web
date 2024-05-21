@@ -58,6 +58,45 @@ class Value {
 	}
 }
 
+function f(
+	valueLeft: Value,
+	valueRight: Value,
+	op: string,
+	assgn: string
+): Value {
+	if (op === "+") {
+		return new Value(
+			assgn,
+			valueLeft.value + valueRight.value,
+			[valueLeft, valueRight],
+			"+"
+		);
+	} else if (op === "-") {
+		return new Value(
+			assgn,
+			valueLeft.value - valueRight.value,
+			[valueLeft, valueRight],
+			"-"
+		);
+	} else if (op === "*") {
+		return new Value(
+			assgn,
+			valueLeft.value * valueRight.value,
+			[valueLeft, valueRight],
+			"*"
+		);
+	} else if (op === "/") {
+		return new Value(
+			assgn,
+			valueLeft.value / valueRight.value,
+			[valueLeft, valueRight],
+			"/"
+		);
+	} else {
+		throw new Error(`Unsupported operation: ${op}`);
+	}
+}
+
 type IdentifierMap = Set<Value>;
 type ASTAnalyzerReturnType = {
 	message: string;
@@ -113,38 +152,59 @@ const useASTAnalyzer = () => {
 				if (assignmentExpr.type != "AssignmentExpression") return;
 				console.log("Assignment Expression achieved!!");
 
-				const binaryRecurse = (node: BinaryExpression) => {
-					if (
-						(node.left.type == "Literal" || node.left.type == "Identifier") &&
-						(node.right.type == "Literal" || node.right.type == "Identifier")
-					) {
-						if (node.left.type == "Literal") {
-							const leftNode = node.left as Literal;
-							addValue(new Value(null, leftNode.raw, null, null));
+				// const binaryRecurse = (node: BinaryExpression) => {
+				// 	if (
+				// 		(node.left.type == "Literal" || node.left.type == "Identifier") &&
+				// 		(node.right.type == "Literal" || node.right.type == "Identifier")
+				// 	) {
+				// 		if (node.left.type == "Literal") {
+				// 			const leftNode = node.left as Literal;
+				// 			addValue(new Value(null, leftNode.raw, null, null));
+				// 		}
+				// 		if (node.left.type == "Identifier") {
+				// 			const leftNode = node.left as Identifier;
+				// 			addValue(new Value(node.left.name, null, null, null));
+				// 		}
+				// 		if (node.right.type == "Literal") {
+				// 			const rightNode = node.right as Literal;
+				// 			addValue(new Value(null, rightNode.raw, null, null));
+				// 		}
+				// 		if (node.right.type == "Identifier") {
+				// 			const rightNode = node.right as Identifier;
+				// 			addValue(new Value(rightNode.name, null, null, null));
+				// 		}
+				// 		console.log(identifierMap);
+				// 		return;
+				// 	}
+				// 	if (node.left.type == "BinaryExpression") {
+				// 		binaryRecurse(node.left);
+				// 	}
+				// };
+
+				function binaryRecurse(node: BinaryExpression, assgn: string): Value {
+					let value: Value;
+					if (node.left && node.right) {
+						const valLeft = binaryRecurse(node.left);
+						const valRight = binaryRecurse(node.right);
+						value = f(valLeft, valRight, node.operator, assgn);
+					} else {
+						if (node.type == "Literal") {
+							const literalNode = node as Literal;
+							value = new Value(null, literalNode.value, null, null);
+						} else if (node.type == "Identifier") {
+							const identifierNode = node as Identifier;
+							value = new Value(identifierNode.name, null, null, null);
+						} else {
+							throw new Error(`Unsupported node type: ${node.type}`);
 						}
-						if (node.left.type == "Identifier") {
-							const leftNode = node.left as Identifier;
-							addValue(new Value(node.left.name, null, null, null));
-						}
-						if (node.right.type == "Literal") {
-							const rightNode = node.right as Literal;
-							addValue(new Value(null, rightNode.raw, null, null));
-						}
-						if (node.right.type == "Identifier") {
-							const rightNode = node.right as Identifier;
-							addValue(new Value(rightNode.name, null, null, null));
-						}
-						console.log(identifierMap);
-						return;
 					}
-					if (node.left.type == "BinaryExpression") {
-						binaryRecurse(node.left);
-					}
-				};
+					addValue(value);
+					return value;
+				}
 
 				if (assignmentExpr.right.type == "BinaryExpression") {
 					const binaryExpr = assignmentExpr.right as BinaryExpression;
-					binaryRecurse(binaryExpr);
+					binaryRecurse(binaryExpr, assignmentExpr.left.name);
 				} else {
 					// FIXME : There is a  delay in recognizing the assignment expression and adding to set
 					if (
@@ -156,6 +216,8 @@ const useASTAnalyzer = () => {
 						addValue(new Value(leftNode.name, rightNode.raw, null, "="));
 					}
 				}
+
+				console.log(identifierMap);
 
 				return null;
 			};
@@ -174,10 +236,10 @@ const useASTAnalyzer = () => {
 		}
 	};
 
-	// Log identifierMap changes for debugging (using useEffect)
-	useEffect(() => {
-		console.log(identifierMap);
-	}, [identifierMap]);
+	// // Log identifierMap changes for debugging (using useEffect)
+	// useEffect(() => {
+	// 	console.log(identifierMap);
+	// }, [identifierMap]);
 
 	// Return state variables and handler functions
 	return { message, handleMessageChange, parseResult, identifierMap };
