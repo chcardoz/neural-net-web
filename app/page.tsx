@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import useASTAnalyzer from "@/lib/astanalyzer";
+import ValueList from "@/lib/valuelist";
 
 /**
  * Renders the Home component.
@@ -10,8 +11,9 @@ import useASTAnalyzer from "@/lib/astanalyzer";
  */
 export default function Home() {
 	const [graph, setGraph] = useState(null);
+	const [identifier, setIdentifier] = useState(new Set());
 	const { message, handleMessageChange, parseResult, identifierMap } =
-		useASTAnalyzer();
+		useASTAnalyzer(setIdentifier);
 
 	return (
 		<div className="flex h-screen">
@@ -36,16 +38,11 @@ export default function Home() {
 					</pre>{" "}
 				</div>
 				<div
-					className="bg-gray-200 p-2 rounded text-black overflow-auto w-full h-full"
+					className="bg-white p-2 rounded text-black overflow-auto w-full h-full"
 					style={{ maxHeight: "50vh" }}
 				>
-					{identifierMap.size > 0
-						? Array.from(identifierMap).map((value, index) => (
-								<div key={index}>
-									{value.name} = {value.value}
-								</div>
-						  ))
-						: "No nodes found"}
+					<h1> Nodes in the lists being printed out:</h1>
+					<ValueList identifier={identifier} />
 				</div>
 			</div>
 		</div>
@@ -53,4 +50,3 @@ export default function Home() {
 }
 
 //  TODO: Add a debounce feature
-// FIXME: fix the recursvive expresion

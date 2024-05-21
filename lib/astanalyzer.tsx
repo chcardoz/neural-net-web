@@ -80,15 +80,13 @@ type ASTAnalyzerReturnType = {
  * - `parseResult`: Contains the parsed AST of the provided JavaScript code.
  * - `identifierMap`: A map containing identifiers and their values extracted from the code.
  */
-const useASTAnalyzer = () => {
+const useASTAnalyzer = (prop: any) => {
 	// State variables
 	const [message, setMessage] = useState<string>("");
 	const [parseResult, setParseResult] = useState<Node | null>(null);
 	const [identifierMap, setIdentifierMap] = useState<IdentifierMap>(
 		new Set<Value>()
 	);
-
-	useEffect(() => {}, [message, parseResult, identifierMap]);
 
 	// Function to handle message changes
 	const handleMessageChange = (e: any) => {
@@ -165,68 +163,63 @@ const useASTAnalyzer = () => {
 				if (assignmentExpr.type != "AssignmentExpression") return;
 				console.log("Assignment Expression achieved!!");
 
-				// const binaryRecurse = (node: BinaryExpression) => {
-				// 	if (
-				// 		(node.left.type == "Literal" || node.left.type == "Identifier") &&
-				// 		(node.right.type == "Literal" || node.right.type == "Identifier")
-				// 	) {
-				// 		if (node.left.type == "Literal") {
-				// 			const leftNode = node.left as Literal;
-				// 			addValue(new Value(null, leftNode.raw, null, null));
-				// 		}
-				// 		if (node.left.type == "Identifier") {
-				// 			const leftNode = node.left as Identifier;
-				// 			addValue(new Value(node.left.name, null, null, null));
-				// 		}
-				// 		if (node.right.type == "Literal") {
-				// 			const rightNode = node.right as Literal;
-				// 			addValue(new Value(null, rightNode.raw, null, null));
-				// 		}
-				// 		if (node.right.type == "Identifier") {
-				// 			const rightNode = node.right as Identifier;
-				// 			addValue(new Value(rightNode.name, null, null, null));
-				// 		}
-				// 		console.log(identifierMap);
-				// 		return;
-				// 	}
-				// 	if (node.left.type == "BinaryExpression") {
-				// 		binaryRecurse(node.left);
-				// 	}
-				// };
-
+				/**
+				 * Recursively evaluates a binary expression tree and returns the computed value.
+				 *
+				 * @param node - The current node in the binary expression tree.
+				 * @param assgn - The assignment string, if applicable.
+				 * @returns The computed value of the binary expression.
+				 *
+				 * The function traverses the binary expression tree recursively. For each node, it evaluates the left
+				 * and right children nodes (if they exist), and applies the binary operator using the helper function `f`.
+				 * If the node is a literal or identifier, it creates a new `Value` object with the corresponding value.
+				 *
+				 * @throws Will throw an error if the node type is unsupported.
+				 */
 				function binaryRecurse(
 					node: BinaryExpression,
 					assgn: string | null
 				): Value {
 					let value: Value;
+
 					if (node.left && node.right) {
-						const valLeft = binaryRecurse(node.left);
-						const valRight = binaryRecurse(node.right);
+						const valLeft = binaryRecurse(node.left, null);
+						const valRight = binaryRecurse(node.right, null);
+
 						if (assgn != null)
 							value = f(valLeft, valRight, node.operator, assgn);
 						else value = f(valLeft, valRight, node.operator, null);
 					} else {
-						if (node.type == "Literal") {
+						if (node.type === "Literal") {
 							const literalNode = node as Literal;
 							value = new Value(null, literalNode.value, null, null);
-						} else if (node.type == "Identifier") {
+						} else if (node.type === "Identifier") {
 							const identifierNode = node as Identifier;
 							value = new Value(identifierNode.name, null, null, null);
 						} else {
 							throw new Error(`Unsupported node type: ${node.type}`);
 						}
 					}
+
 					addValue(value);
 					return value;
 				}
 
-				if (assignmentExpr.right.type == "BinaryExpression") {
+				/**
+				 * Processes an assignment expression and evaluates it if it is a binary expression.
+				 * If the right side of the assignment is a binary expression, it calls `binaryRecurse`
+				 * to evaluate the expression. If the assignment is a simple identifier to literal assignment,
+				 * it directly creates and adds a `Value` object.
+				 *
+				 * @param assignmentExpr - The assignment expression to be processed.
+				 */
+				if (assignmentExpr.right.type === "BinaryExpression") {
 					const binaryExpr = assignmentExpr.right as BinaryExpression;
 					binaryRecurse(binaryExpr, assignmentExpr.left.name);
 				} else {
 					if (
-						assignmentExpr.left.type == "Identifier" &&
-						assignmentExpr.right.type == "Literal"
+						assignmentExpr.left.type === "Identifier" &&
+						assignmentExpr.right.type === "Literal"
 					) {
 						const leftNode = assignmentExpr.left as Identifier;
 						const rightNode = assignmentExpr.right as Literal;
@@ -235,6 +228,7 @@ const useASTAnalyzer = () => {
 				}
 
 				console.log(identifierMap);
+				prop(identifierMap);
 
 				return null;
 			};
