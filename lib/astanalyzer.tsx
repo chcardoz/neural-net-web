@@ -58,45 +58,6 @@ class Value {
 	}
 }
 
-function f(
-	valueLeft: Value,
-	valueRight: Value,
-	op: string,
-	assgn: string
-): Value {
-	if (op === "+") {
-		return new Value(
-			assgn,
-			valueLeft.value + valueRight.value,
-			[valueLeft, valueRight],
-			"+"
-		);
-	} else if (op === "-") {
-		return new Value(
-			assgn,
-			valueLeft.value - valueRight.value,
-			[valueLeft, valueRight],
-			"-"
-		);
-	} else if (op === "*") {
-		return new Value(
-			assgn,
-			valueLeft.value * valueRight.value,
-			[valueLeft, valueRight],
-			"*"
-		);
-	} else if (op === "/") {
-		return new Value(
-			assgn,
-			valueLeft.value / valueRight.value,
-			[valueLeft, valueRight],
-			"/"
-		);
-	} else {
-		throw new Error(`Unsupported operation: ${op}`);
-	}
-}
-
 type IdentifierMap = Set<Value>;
 type ASTAnalyzerReturnType = {
 	message: string;
@@ -127,6 +88,8 @@ const useASTAnalyzer = () => {
 		new Set<Value>()
 	);
 
+	useEffect(() => {}, [message, parseResult, identifierMap]);
+
 	// Function to handle message changes
 	const handleMessageChange = (e: any) => {
 		setMessage(e.target.value);
@@ -135,8 +98,58 @@ const useASTAnalyzer = () => {
 
 	// Function to handle adding a new Value type to the identifier set
 	const addValue = (newValue: Value) => {
+		for (let value of identifierMap) {
+			if (value.name == newValue.name) return;
+		}
 		setIdentifierMap(new Set<Value>(identifierMap.add(newValue)));
 	};
+
+	function f(
+		valueLeft: Value,
+		valueRight: Value,
+		op: string,
+		assgn: string
+	): Value {
+		for (let value of identifierMap) {
+			if (valueLeft.name != null && value.name == valueLeft.name) {
+				valueLeft = value;
+			}
+			if (valueRight.name != null && value.name == valueRight.name) {
+				valueRight = value;
+			}
+		}
+		if (op === "+") {
+			return new Value(
+				assgn,
+				valueLeft.value + valueRight.value,
+				[valueLeft, valueRight],
+				"+"
+			);
+		} else if (op === "-") {
+			return new Value(
+				assgn,
+				valueLeft.value - valueRight.value,
+				[valueLeft, valueRight],
+				"-"
+			);
+		} else if (op === "*") {
+			return new Value(
+				assgn,
+				valueLeft.value * valueRight.value,
+				[valueLeft, valueRight],
+				"*"
+			);
+		} else if (op === "/") {
+			return new Value(
+				assgn,
+				valueLeft.value / valueRight.value,
+				[valueLeft, valueRight],
+				"/"
+			);
+		} else {
+			throw new Error(`Unsupported operation: ${op}`);
+		}
+	}
 
 	// Function to analyze JavaScript code and update states accordingly
 	const analyzeCode = (code: string) => {
@@ -181,12 +194,17 @@ const useASTAnalyzer = () => {
 				// 	}
 				// };
 
-				function binaryRecurse(node: BinaryExpression, assgn: string): Value {
+				function binaryRecurse(
+					node: BinaryExpression,
+					assgn: string | null
+				): Value {
 					let value: Value;
 					if (node.left && node.right) {
 						const valLeft = binaryRecurse(node.left);
 						const valRight = binaryRecurse(node.right);
-						value = f(valLeft, valRight, node.operator, assgn);
+						if (assgn != null)
+							value = f(valLeft, valRight, node.operator, assgn);
+						else value = f(valLeft, valRight, node.operator, null);
 					} else {
 						if (node.type == "Literal") {
 							const literalNode = node as Literal;
@@ -206,7 +224,6 @@ const useASTAnalyzer = () => {
 					const binaryExpr = assignmentExpr.right as BinaryExpression;
 					binaryRecurse(binaryExpr, assignmentExpr.left.name);
 				} else {
-					// FIXME : There is a  delay in recognizing the assignment expression and adding to set
 					if (
 						assignmentExpr.left.type == "Identifier" &&
 						assignmentExpr.right.type == "Literal"
@@ -235,11 +252,6 @@ const useASTAnalyzer = () => {
 			setIdentifierMap(new Set<Value>());
 		}
 	};
-
-	// // Log identifierMap changes for debugging (using useEffect)
-	// useEffect(() => {
-	// 	console.log(identifierMap);
-	// }, [identifierMap]);
 
 	// Return state variables and handler functions
 	return { message, handleMessageChange, parseResult, identifierMap };

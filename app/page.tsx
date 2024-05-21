@@ -27,13 +27,25 @@ export default function Home() {
 			<div className="flex-1 flex flex-col items-start p-4">
 				<div
 					className="bg-gray-200 p-2 rounded text-black overflow-auto w-full h-full"
-					style={{ maxHeight: "100vh" }}
+					style={{ maxHeight: "50vh" }}
 				>
 					<pre>
 						{parseResult
 							? JSON.stringify(parseResult, null, 2)
 							: "Invalid JavaScript code"}
 					</pre>{" "}
+				</div>
+				<div
+					className="bg-gray-200 p-2 rounded text-black overflow-auto w-full h-full"
+					style={{ maxHeight: "50vh" }}
+				>
+					{identifierMap.size > 0
+						? Array.from(identifierMap).map((value, index) => (
+								<div key={index}>
+									{value.name} = {value.value}
+								</div>
+						  ))
+						: "No nodes found"}
 				</div>
 			</div>
 		</div>
