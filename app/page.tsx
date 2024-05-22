@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import useASTAnalyzer from "@/lib/astanalyzer";
-import ValueList from "@/lib/valuelist";
+import ForceDirectedGraph from "@/lib/Graph";
 
 /**
  * Renders the Home component.
@@ -41,8 +41,7 @@ export default function Home() {
 			</div>
 			<div className="flex-1 p-4">
 				<div className="bg-white p-2 rounded text-black overflow-auto w-full h-full">
-					<h1> Nodes in the lists being printed out:</h1>
-					<ValueList identifier={identifiers} />
+					<ForceDirectedGraph />
 				</div>
 			</div>
 		</div>

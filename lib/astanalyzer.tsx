@@ -9,7 +9,7 @@ import {
 	Literal,
 	Identifier
 } from "acorn";
-import { Value } from "../lib/Value";
+import { Value } from "./value";
 
 type ASTAnalyzerReturnType = {
 	message: string;
