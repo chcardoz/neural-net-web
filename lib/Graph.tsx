@@ -62,10 +62,9 @@ const ForceDirectedGraph = ({ data }: any) => {
 		// Create SVG element
 		const svg = d3
 			.select(svgRef.current!)
-			.attr("width", width)
-			.attr("height", height)
 			.attr("viewBox", `0 0 ${width} ${height}`)
-			.attr("style", "max-width: 100%; height: auto;");
+			.attr("preserveAspectRatio", "xMidYMid meet")
+			.attr("style", "width: 100%; height: 100%;");
 
 		// Create links
 		const link = svg
