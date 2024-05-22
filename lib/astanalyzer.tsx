@@ -208,5 +208,4 @@ const useASTAnalyzer = () => {
 
 export default useASTAnalyzer;
 
-// Recursion done
-// TODO : list instead of set
+// FIXME handle rewriting identifier names.
