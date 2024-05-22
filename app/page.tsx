@@ -21,30 +21,26 @@ export default function Home() {
 
 	return (
 		<div className="flex h-screen">
-			<div className="flex-grow bg-gray-200 p-4">
+			<div className="w-1/4 p-4">
 				<textarea
 					value={message}
 					onChange={handleMessageChange}
-					className="flex-grow p-2 pl-4 rounded border border-gray-400 resize-none text-black w-full h-full"
-					style={{ alignSelf: "flex-start", textAlign: "left" }}
+					className="w-full h-1/2 p-2 pl-4 rounded border border-gray-400 resize-none text-black"
 					placeholder="Type your message here"
 				/>
-			</div>
-			<div className="flex-1 flex flex-col items-start p-4">
 				<div
-					className="bg-gray-200 p-2 rounded text-black overflow-auto w-full h-full"
-					style={{ maxHeight: "50vh" }}
+					className="bg-gray-200 p-2 rounded text-black overflow-auto mt-4"
+					style={{ height: "50%" }}
 				>
 					<pre>
 						{parseResult
 							? JSON.stringify(parseResult, null, 2)
 							: "Invalid JavaScript code"}
-					</pre>{" "}
+					</pre>
 				</div>
-				<div
-					className="bg-white p-2 rounded text-black overflow-auto w-full h-full"
-					style={{ maxHeight: "50vh" }}
-				>
+			</div>
+			<div className="flex-1 p-4">
+				<div className="bg-white p-2 rounded text-black overflow-auto w-full h-full">
 					<h1> Nodes in the lists being printed out:</h1>
 					<ValueList identifier={identifiers} />
 				</div>
