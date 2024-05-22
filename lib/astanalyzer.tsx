@@ -11,12 +11,11 @@ import {
 } from "acorn";
 import { Value } from "../lib/Value";
 
-type IdentifierMap = Set<Value>;
 type ASTAnalyzerReturnType = {
 	message: string;
 	handleMessageChange: (e: any) => void;
 	parseResult: Node | null;
-	identifierMap: IdentifierMap;
+	identifiers: Value[];
 };
 
 /**
@@ -33,42 +32,26 @@ type ASTAnalyzerReturnType = {
  * - `parseResult`: Contains the parsed AST of the provided JavaScript code.
  * - `identifierMap`: A map containing identifiers and their values extracted from the code.
  */
-const useASTAnalyzer = (prop: any) => {
+const useASTAnalyzer = () => {
 	// State variables
 	const [message, setMessage] = useState<string>("");
 	const [parseResult, setParseResult] = useState<Node | null>(null);
-	const [identifierMap, setIdentifierMap] = useState<IdentifierMap>(
-		new Set<Value>()
-	);
+	const [identifiers, setIdentifiers] = useState<Value[]>([]);
+	let localidentifiers: Value[] = [];
 
 	// Function to handle message changes
 	const handleMessageChange = (e: any) => {
 		setMessage(e.target.value);
 		analyzeCode(e.target.value);
+		setIdentifiers(localidentifiers);
 	};
 
-	// Function to handle adding a new Value type to the identifier set
-	const addValue = (newValue: Value) => {
-		for (let value of identifierMap) {
-			if (value.name == newValue.name) return;
-		}
-		setIdentifierMap(new Set<Value>(identifierMap.add(newValue)));
-	};
-
-	function f(
+	function calculateValue(
 		valueLeft: Value,
 		valueRight: Value,
 		op: string,
 		assgn: string
 	): Value {
-		for (let value of identifierMap) {
-			if (valueLeft.name != null && value.name == valueLeft.name) {
-				valueLeft = value;
-			}
-			if (valueRight.name != null && value.name == valueRight.name) {
-				valueRight = value;
-			}
-		}
 		if (op === "+") {
 			return new Value(
 				assgn,
@@ -106,7 +89,6 @@ const useASTAnalyzer = (prop: any) => {
 	const analyzeCode = (code: string) => {
 		try {
 			const parsed = acorn.parse(code, { ecmaVersion: 2020 });
-			const identifiers: IdentifierMap = new Set<Value>();
 
 			// Traverse the parsed AST
 			const traverse = (node: any) => {
@@ -129,32 +111,48 @@ const useASTAnalyzer = (prop: any) => {
 				 *
 				 * @throws Will throw an error if the node type is unsupported.
 				 */
-				function binaryRecurse(
-					node: BinaryExpression,
-					assgn: string | null
-				): Value {
+				function binaryRecurse(node: BinaryExpression, assgn: string): Value {
 					let value: Value;
 
 					if (node.left && node.right) {
-						const valLeft = binaryRecurse(node.left, null);
-						const valRight = binaryRecurse(node.right, null);
+						const valLeft = binaryRecurse(
+							node.left as BinaryExpression,
+							"intermediate"
+						);
+						const valRight = binaryRecurse(
+							node.right as BinaryExpression,
+							"intermediate"
+						);
 
-						if (assgn != null)
-							value = f(valLeft, valRight, node.operator, assgn);
-						else value = f(valLeft, valRight, node.operator, null);
+						value = calculateValue(valLeft, valRight, node.operator, assgn);
 					} else {
-						if (node.type === "Literal") {
-							const literalNode = node as Literal;
-							value = new Value(null, literalNode.value, null, null);
-						} else if (node.type === "Identifier") {
-							const identifierNode = node as Identifier;
-							value = new Value(identifierNode.name, null, null, null);
+						let newNode = node as Node;
+						if (newNode.type === "Literal") {
+							const literalNode = newNode as Literal;
+							value = new Value(
+								String(literalNode.raw),
+								Number(literalNode.value),
+								null,
+								""
+							);
+						} else if (newNode.type === "Identifier") {
+							const identifierNode = newNode as Identifier;
+							// this where we need the
+							const found = identifiers.find(
+								(identifier) => identifier.name == identifierNode.name
+							);
+							if (found != undefined) value = found;
+							else
+								throw new Error(
+									`Cannot have undefined identifiers, please define ${identifierNode.name} before`
+								);
 						} else {
 							throw new Error(`Unsupported node type: ${node.type}`);
 						}
 					}
 
-					addValue(value);
+					// addValue(value);
+					localidentifiers.push(value);
 					return value;
 				}
 
@@ -168,7 +166,8 @@ const useASTAnalyzer = (prop: any) => {
 				 */
 				if (assignmentExpr.right.type === "BinaryExpression") {
 					const binaryExpr = assignmentExpr.right as BinaryExpression;
-					binaryRecurse(binaryExpr, assignmentExpr.left.name);
+					let leftNode = assignmentExpr.left as Identifier;
+					const retVal = binaryRecurse(binaryExpr, leftNode.name);
 				} else {
 					if (
 						assignmentExpr.left.type === "Identifier" &&
@@ -176,12 +175,16 @@ const useASTAnalyzer = (prop: any) => {
 					) {
 						const leftNode = assignmentExpr.left as Identifier;
 						const rightNode = assignmentExpr.right as Literal;
-						addValue(new Value(leftNode.name, rightNode.raw, null, "="));
+						// addValue(
+						// 	new Value(leftNode.name, Number(rightNode.value), null, "=")
+						// );
+						localidentifiers.push(
+							new Value(leftNode.name, Number(rightNode.value), null, "=")
+						);
 					}
 				}
-
-				console.log(identifierMap);
-				prop(identifierMap);
+				console.log(localidentifiers);
+				//prop(identifierMap);
 
 				return null;
 			};
@@ -191,19 +194,19 @@ const useASTAnalyzer = (prop: any) => {
 
 			// Update states with parse result and identifier map
 			setParseResult(parsed);
-			setIdentifierMap(identifiers);
 		} catch (error) {
 			console.error("Invalid JavaScript code: ", error);
 			// Reset states on error
 			setParseResult(null);
-			setIdentifierMap(new Set<Value>());
+			// setIdentifiers([]);
 		}
 	};
 
 	// Return state variables and handler functions
-	return { message, handleMessageChange, parseResult, identifierMap };
+	return { message, handleMessageChange, parseResult, identifiers };
 };
 
 export default useASTAnalyzer;
 
 // Recursion done
+// TODO : list instead of set

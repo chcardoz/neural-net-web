@@ -11,9 +11,13 @@ import ValueList from "@/lib/valuelist";
  */
 export default function Home() {
 	const [graph, setGraph] = useState(null);
-	const [identifier, setIdentifier] = useState(new Set());
-	const { message, handleMessageChange, parseResult, identifierMap } =
-		useASTAnalyzer(setIdentifier);
+	//const [identifier, setIdentifier] = useState(new Set());
+	const { message, handleMessageChange, parseResult, identifiers } =
+		useASTAnalyzer();
+
+	useEffect(() => {
+		console.log(identifiers);
+	}, [identifiers]);
 
 	return (
 		<div className="flex h-screen">
@@ -42,7 +46,7 @@ export default function Home() {
 					style={{ maxHeight: "50vh" }}
 				>
 					<h1> Nodes in the lists being printed out:</h1>
-					<ValueList identifier={identifier} />
+					<ValueList identifier={identifiers} />
 				</div>
 			</div>
 		</div>

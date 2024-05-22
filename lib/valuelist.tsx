@@ -24,11 +24,10 @@ const renderChildren = (children: any) => (
 
 const ValueList = (props: any) => (
 	<div>
-		{props.identifier.size > 0
-			? Array.from(props.identifier).map((value: any, index: any) => (
+		{props.identifier.length > 0
+			? props.identifier.map((value: any, index: any) => (
 					<div
 						key={index}
-						className="text-black"
 						style={{ marginBottom: "10px" }}
 					>
 						<p>
