@@ -11,12 +11,37 @@
  * <ForceDirectedGraph data={graphData} />
  */
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 import data from "@/public/miserables.json";
+import { Value } from "@/lib/Value";
+import { GraphData, GraphLink, GraphNode } from "@/lib/types";
 
 // Default graph data
 const graphData = data;
+type ForceDirectedGraphProps = {
+  finalValue: Value | undefined;
+};
+
+const buildGraphData = (finalValue: Value | undefined): GraphData => {
+  if (!finalValue) return { nodes: [], links: [] };
+
+  const nodes: GraphNode[] = [];
+  const links: GraphLink[] = [];
+
+  const traverse = (val: Value, group: number) => {
+    nodes.push({ id: val.name, group });
+    if (val.children) {
+      val.children.forEach((child) => {
+        links.push({ source: val.name, target: child.name, value: 1 });
+        traverse(child, group + 1);
+      });
+    }
+  };
+
+  traverse(finalValue, 1);
+  return { nodes, links };
+};
 
 /**
  * ForceDirectedGraph component renders a force-directed graph using D3.js library.
@@ -24,116 +49,151 @@ const graphData = data;
  * @param {Object} props.data - Graph data containing nodes and links
  * @returns {JSX.Element} - ForceDirectedGraph component
  */
-const ForceDirectedGraph = ({ data }: any) => {
-	// Reference to SVG element
-	const svgRef = useRef<SVGSVGElement>(null);
+const ForceDirectedGraph: React.FC<{ finalValue: any }> = ({ finalValue }) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [graphData, setGraphData] = useState<GraphData>({
+    nodes: [],
+    links: [],
+  });
 
-	// Initialize with default or provided data
-	data = graphData;
+  useEffect(() => {
+    const data = buildGraphData(finalValue);
+    setGraphData(data);
+  }, [finalValue]);
 
-	// Log graph data to console
-	console.log("====================================");
-	console.log(data);
-	console.log("====================================");
+  useEffect(() => {
+    const width = 928;
+    const height = 600;
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-	// Effect hook for D3.js initialization
-	useEffect(() => {
-		const width = 928; // SVG width
-		const height = 600; // SVG height
+    const svg = d3
+      .select(svgRef.current)
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .attr("style", "width: 100%; height: 100%;");
 
-		// D3 color scale
-		const color = d3.scaleOrdinal(d3.schemeCategory10);
+    svg.selectAll("*").remove(); // Clear previous SVG contents
 
-		// Extract links and nodes from data
-		const links = data.links.map((d: any) => ({ ...d }));
-		const nodes = data.nodes.map((d: any) => ({ ...d }));
+    const linkGroup = svg
+      .append("g")
+      .attr("class", "links")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6);
+    const nodeGroup = svg
+      .append("g")
+      .attr("class", "nodes")
+      .attr("stroke", "#000")
+      .attr("stroke-width", 1.5);
 
-		// Initialize D3 force simulation
-		const simulation = d3
-			.forceSimulation(nodes)
-			.force(
-				"link",
-				d3.forceLink(links).id((d: any) => d.id)
-			)
-			.force("charge", d3.forceManyBody())
-			.force("center", d3.forceCenter(width / 2, height / 2))
-			.on("tick", ticked);
+    const simulation = d3
+      .forceSimulation()
+      .force(
+        "link",
+        d3
+          .forceLink()
+          .id((d: any) => d.id)
+          .distance(100)
+      )
+      .force("charge", d3.forceManyBody().strength(-200))
+      .force("center", d3.forceCenter(width / 2, height / 2));
 
-		// Create SVG element
-		const svg = d3
-			.select(svgRef.current!)
-			.attr("viewBox", `0 0 ${width} ${height}`)
-			.attr("preserveAspectRatio", "xMidYMid meet")
-			.attr("style", "width: 100%; height: 100%;");
+    const drag = (simulation: d3.Simulation<any, any>) => {
+      const dragstarted = (
+        event: d3.D3DragEvent<SVGCircleElement, any, any>,
+        d: any
+      ) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      };
 
-		// Create links
-		const link = svg
-			.append("g")
-			.attr("stroke", "#999")
-			.attr("stroke-opacity", 0.6)
-			.selectAll("line")
-			.data(links)
-			.join("line")
-			.attr("stroke-width", (d: any) => Math.sqrt(d.value));
+      const dragged = (
+        event: d3.D3DragEvent<SVGCircleElement, any, any>,
+        d: any
+      ) => {
+        d.fx = event.x;
+        d.fy = event.y;
+      };
 
-		// Create nodes
-		const node = svg
-			.append("g")
-			.attr("stroke", "#fff")
-			.attr("stroke-width", 1.5)
-			.selectAll("circle")
-			.data(nodes)
-			.join("circle")
-			.attr("r", 5)
-			.attr("fill", (d: any) => color(d.group))
-			.call(drag(simulation));
+      const dragended = (
+        event: d3.D3DragEvent<SVGCircleElement, any, any>,
+        d: any
+      ) => {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      };
 
-		// Add title to nodes
-		node.append("title").text((d: any) => d.id);
+      return d3
+        .drag<SVGCircleElement, any>()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+    };
 
-		// Update link and node positions
-		function ticked() {
-			link
-				.attr("x1", (d: any) => d.source.x)
-				.attr("y1", (d: any) => d.source.y)
-				.attr("x2", (d: any) => d.target.x)
-				.attr("y2", (d: any) => d.target.y);
+    const updateGraph = (nodes: any[], links: any[]) => {
+      const link = linkGroup
+        .selectAll<SVGLineElement, any>("line")
+        .data(links, (d: any) => `${d.source.id}-${d.target.id}`)
+        .join(
+          (enter) =>
+            enter
+              .append("line")
+              .attr("stroke-width", (d: any) => Math.sqrt(d.value)),
+          (update) => update,
+          (exit) => exit.remove()
+        );
 
-			node.attr("cx", (d: any) => d.x).attr("cy", (d: any) => d.y);
-		}
+      const node = nodeGroup
+        .selectAll<SVGCircleElement, any>("circle")
+        .data(nodes, (d: any) => d.id)
+        .join(
+          (enter) =>
+            enter
+              .append("circle")
+              .attr("r", 5)
+              .attr("fill", (d: any) => color(d.group))
+              .call(drag(simulation))
+              .append("title")
+              .text((d: any) => d.id),
+          (update) => update,
+          (exit) => exit.remove()
+        );
 
-		// Function for drag behavior
-		function drag(simulation: any) {
-			return function (selection: any) {
-				selection.call(
-					d3
-						.drag()
-						.on("start", (event: any, d: any) => {
-							if (!event.active) simulation.alphaTarget(0.3).restart();
-							d.fx = d.x;
-							d.fy = d.y;
-						})
-						.on("drag", (event: any, d: any) => {
-							d.fx = event.x;
-							d.fy = event.y;
-						})
-						.on("end", (event: any, d: any) => {
-							if (!event.active) simulation.alphaTarget(0);
-							d.fx = null;
-							d.fy = null;
-						})
-				);
-			};
-		}
+      simulation.nodes(nodes).on("tick", () => {
+        link
+          .attr("x1", (d: any) => d.source.x)
+          .attr("y1", (d: any) => d.source.y)
+          .attr("x2", (d: any) => d.target.x)
+          .attr("y2", (d: any) => d.target.y);
 
-		// Cleanup function
-		return () => {
-			simulation.stop();
-		};
-	}, [data]);
+        node.attr("cx", (d: any) => d.x).attr("cy", (d: any) => d.y);
+      });
 
-	// Render SVG element
-	return <svg ref={svgRef}></svg>;
+      nodes.forEach((node) => {
+        node.x = Math.random() * width;
+        node.y = Math.random() * height;
+      });
+
+      const forceLink = simulation.force<d3.ForceLink<any, any>>("link");
+      if (forceLink) {
+        forceLink.links(links);
+      }
+
+      simulation.alpha(1).restart();
+    };
+
+    if (graphData.nodes.length && graphData.links.length) {
+      updateGraph(graphData.nodes, graphData.links);
+    }
+
+    return () => {
+      simulation.stop();
+      svg.selectAll("*").remove();
+    };
+  }, [graphData]);
+
+  return <svg ref={svgRef}></svg>;
 };
 
 export default ForceDirectedGraph;
