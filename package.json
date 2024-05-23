@@ -12,15 +12,19 @@
     "@types/d3": "^7.4.3",
     "acorn": "^8.11.3",
     "d3": "^7.9.0",
+    "lodash.debounce": "^4.0.8",
     "next": "14.2.3",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/acorn": "^6.0.0",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/uuid": "^9.0.8",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",

@@ -1,6 +1,8 @@
 "use client";
 import useASTAnalyzer from "@/lib/useAstAnalyzer";
 import ForceDirectedGraph from "@/lib/Graph";
+import { useCallback, useEffect } from "react";
+import debounce from "lodash.debounce";
 
 /**
  * Renders the Home component.
@@ -15,6 +17,23 @@ export default function Home() {
 		declaredIdentifiers,
 		finalValue
 	} = useASTAnalyzer();
+
+	// Debounce the handleMessageChange function
+	const debouncedHandleMessageChange = useCallback(
+		debounce((event) => handleMessageChange(event), 800, { trailing: true }), // 300ms debounce delay
+		[]
+	);
+
+	// Cleanup the debounce function on component unmount
+	useEffect(() => {
+		return () => {
+			debouncedHandleMessageChange.cancel();
+		};
+	}, [debouncedHandleMessageChange]);
+
+	useEffect(() => {
+		console.log(finalValue);
+	}, [finalValue]);
 
 	return (
 		<div className="flex h-screen">
@@ -37,12 +56,10 @@ export default function Home() {
 				</div>
 			</div>
 			<div className="flex-1 p-4">
-				<div className="bg-white p-2 rounded text-black overflow-auto w-full h-full flex items-center justify-center">
+				<div className="bg-white p-2 rounded text-black w-full h-full flex items-center justify-center">
 					<ForceDirectedGraph finalValue={finalValue} />
 				</div>
 			</div>
 		</div>
 	);
 }
-
-//  TODO: Add a debounce feature
