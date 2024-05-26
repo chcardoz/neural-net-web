@@ -112,6 +112,19 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
 			.join("line")
 			.attr("stroke-width", (d: any) => Math.sqrt(d.value));
 
+		// Create nodes
+		// const node = svg
+		// 	.append("g")
+		// 	.attr("stroke", "#fff")
+		// 	.attr("stroke-width", 1.5)
+		// 	.selectAll("circle")
+		// 	.data(graphData.nodes)
+		// 	.join("circle")
+		// 	.attr("r", (d: any) => 50 / d.group)
+		// 	.attr("fill", (d: any) => color(d.group))
+		// 	.call(drag(simulation))
+		// 	.text((d: any) => d.id);
+
 		const node = svg
 			.append("g")
 			.attr("stroke", "#000000")
@@ -119,7 +132,8 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
 			.selectAll("g")
 			.data(graphData.nodes)
 			.enter()
-			.append("g");
+			.append("g")
+			.call(drag(simulation));
 
 		var cicles = node
 			.append("circle")
@@ -181,3 +195,4 @@ export default ForceDirectedGraph;
 //  FIXME : stops at the first binary statement.
 // TODO :  prettify the code
 // uniform the id system
+// add text to circle
