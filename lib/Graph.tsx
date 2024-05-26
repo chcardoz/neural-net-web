@@ -112,18 +112,21 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
 			.join("line")
 			.attr("stroke-width", (d: any) => Math.sqrt(d.value));
 
-		// Create nodes
 		const node = svg
 			.append("g")
-			.attr("stroke", "#fff")
+			.attr("stroke", "#000000")
 			.attr("stroke-width", 1.5)
-			.selectAll("circle")
+			.selectAll("g")
 			.data(graphData.nodes)
-			.join("circle")
+			.enter()
+			.append("g");
+
+		var cicles = node
+			.append("circle")
 			.attr("r", (d: any) => 50 / d.group)
-			.attr("fill", (d: any) => color(d.group))
-			.call(drag(simulation))
-			.text((d: any) => d.id);
+			.attr("fill", (d: any) => color(d.group));
+
+		var texts = node.append("text").text((d: any) => d.id);
 
 		function ticked() {
 			link
@@ -132,7 +135,7 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
 				.attr("x2", (d: any) => d.target.x)
 				.attr("y2", (d: any) => d.target.y);
 
-			node.attr("cx", (d: any) => d.x).attr("cy", (d: any) => d.y);
+			node.attr("transform", (d: any) => `translate(${d.x}, ${d.y})`);
 		}
 
 		function drag(simulation: any) {
@@ -178,4 +181,3 @@ export default ForceDirectedGraph;
 //  FIXME : stops at the first binary statement.
 // TODO :  prettify the code
 // uniform the id system
-// add text to circle
