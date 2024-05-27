@@ -32,8 +32,8 @@ export default function Home() {
 	}, [debouncedHandleMessageChange]);
 
 	useEffect(() => {
-		console.log(finalValue);
-	}, [finalValue]);
+		console.log(finalValue, declaredIdentifiers);
+	}, [finalValue, declaredIdentifiers]);
 
 	return (
 		<div className="flex h-screen">

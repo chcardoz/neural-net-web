@@ -53,7 +53,6 @@ const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
 	};
 
 	traverse(finalValue, 1);
-	console.log(nodes, links);
 	return { nodes, links };
 };
 
@@ -111,19 +110,6 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
 			.data(graphData.links)
 			.join("line")
 			.attr("stroke-width", (d: any) => Math.sqrt(d.value));
-
-		// Create nodes
-		// const node = svg
-		// 	.append("g")
-		// 	.attr("stroke", "#fff")
-		// 	.attr("stroke-width", 1.5)
-		// 	.selectAll("circle")
-		// 	.data(graphData.nodes)
-		// 	.join("circle")
-		// 	.attr("r", (d: any) => 50 / d.group)
-		// 	.attr("fill", (d: any) => color(d.group))
-		// 	.call(drag(simulation))
-		// 	.text((d: any) => d.id);
 
 		const node = svg
 			.append("g")
@@ -193,6 +179,4 @@ export default ForceDirectedGraph;
 
 // possible fixes:
 //  FIXME : stops at the first binary statement.
-// TODO :  prettify the code
 // uniform the id system
-// add text to circle

@@ -25,11 +25,17 @@ const useASTAnalyzer = (): ASTAnalyzerReturnType => {
 	const [parseResult, setParseResult] = useState<Node | null>(null);
 	const [declaredIdentifiers, setDeclaredIdentifiers] = useState<Value[]>([]);
 	const [finalValue, setFinalValue] = useState<Value>();
-	let _finalValue: Value;
+	let _finalValue: Value = new Value("", 0, null, "");
 	let _declaredIdentifiers: Value[] = [];
 
 	const handleMessageChange = (e: any) => {
 		setMessage(e.target.value);
+		console.log(
+			"Declared Identifiers before calling Analyze:",
+			_declaredIdentifiers
+		);
+		console.log("Final value before calling Analyze:", _finalValue);
+
 		analyzeCode(e.target.value);
 		setDeclaredIdentifiers(_declaredIdentifiers);
 		setFinalValue(_finalValue);
@@ -52,9 +58,21 @@ const useASTAnalyzer = (): ASTAnalyzerReturnType => {
 			) {
 				const leftNode = assignmentExpr.left as Identifier;
 				const rightNode = assignmentExpr.right as Literal;
+				console.log(
+					"Declared Identifiers when encountering a=1 or a=b:",
+					_declaredIdentifiers
+				);
+				console.log("Final value at this time:", _finalValue);
+
 				_declaredIdentifiers.push(
 					new Value(leftNode.name, Number(rightNode.value), null, "=")
 				);
+
+				console.log(
+					"Declared Identifiers after pushing a=1 or a=b:",
+					_declaredIdentifiers
+				);
+				console.log("Final value at this time:", _finalValue);
 			}
 		}
 	};
@@ -77,6 +95,11 @@ const useASTAnalyzer = (): ASTAnalyzerReturnType => {
 				);
 			} else if (newNode.type === "Identifier") {
 				const identifierNode = newNode as Identifier;
+				console.log(
+					"Declared Identifiers when a new identifier node has been found:",
+					_declaredIdentifiers
+				);
+				console.log("Final value at this time:", _finalValue);
 
 				const found = _declaredIdentifiers.find(
 					(identifier) => identifier.name == identifierNode.name
@@ -91,6 +114,12 @@ const useASTAnalyzer = (): ASTAnalyzerReturnType => {
 			}
 		}
 
+		console.log(
+			"Declared Identifiers when binary recursion has finished:",
+			_declaredIdentifiers
+		);
+		console.log("Final value at this time:", _finalValue);
+		console.log("Value:", value);
 		return value;
 	};
 
@@ -100,7 +129,7 @@ const useASTAnalyzer = (): ASTAnalyzerReturnType => {
 			parsed.body.forEach((node: Node) => traverse(node));
 			setParseResult(parsed);
 		} catch (e: any) {
-			console.log("Invalid JavaScript code: ", e.message);
+			console.log("Invalid JavaScript code: ", e);
 			setParseResult(null);
 		}
 	};
