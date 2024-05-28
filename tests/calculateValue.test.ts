@@ -1,7 +1,20 @@
 import { calculateValue } from "@/lib/calculateValue";
 import { Value } from "@/lib/Value";
 
-describe("calculateValue", () => {
+describe("calculateValue with unsupported operation", () => {
+	it("should throw an error when the operation is not supported", () => {
+		const valueLeft = new Value("valueLeft", 5, null, "");
+		const valueRight = new Value("valueRight", 10, null, "");
+		const op = "%";
+		const assgn = "a";
+
+		expect(() => calculateValue(valueLeft, valueRight, op, assgn)).toThrowError(
+			"Unsupported operation: %"
+		);
+	});
+});
+
+describe("calculateValue with Numbers", () => {
 	it("should return the sum of two values when the operation is '+'", () => {
 		const valueLeft = new Value("valueLeft", 5, null, "");
 		const valueRight = new Value("valueRight", 10, null, "");
@@ -13,47 +26,36 @@ describe("calculateValue", () => {
 		expect(result).toEqual(new Value("c", 15, [valueLeft, valueRight], "+"));
 	});
 
-	// it("should return the difference of two values when the operation is '-'", () => {
-	//     const valueLeft: Value = { number: 10 };
-	//     const valueRight: Value = { number: 5 };
-	//     const op = "-";
-	//     const assgn = "=";
+	it("should return the difference of two values when the operation is '-'", () => {
+		const valueLeft = new Value("valueLeft", 10, null, "");
+		const valueRight = new Value("valueRight", 5, null, "");
+		const op = "-";
+		const assgn = "d";
 
-	//     const result = calculateValue(valueLeft, valueRight, op, assgn);
+		const result = calculateValue(valueLeft, valueRight, op, assgn);
 
-	//     expect(result).toEqual({ number: 5 });
-	// });
+		expect(result).toEqual(new Value("d", 5, [valueLeft, valueRight], "-"));
+	});
 
-	// it("should return the product of two values when the operation is '*'", () => {
-	//     const valueLeft: Value = { number: 5 };
-	//     const valueRight: Value = { number: 10 };
-	//     const op = "*";
-	//     const assgn = "=";
+	it("should return the product of two values when the operation is '*'", () => {
+		const valueLeft = new Value("valueLeft", 5, null, "");
+		const valueRight = new Value("valueRight", 10, null, "");
+		const op = "*";
+		const assgn = "e";
 
-	//     const result = calculateValue(valueLeft, valueRight, op, assgn);
+		const result = calculateValue(valueLeft, valueRight, op, assgn);
 
-	//     expect(result).toEqual({ number: 50 });
-	// });
+		expect(result).toEqual(new Value("e", 50, [valueLeft, valueRight], "*"));
+	});
 
-	// it("should return the quotient of two values when the operation is '/'", () => {
-	//     const valueLeft: Value = { number: 10 };
-	//     const valueRight: Value = { number: 2 };
-	//     const op = "/";
-	//     const assgn = "=";
+	it("should return the quotient of two values when the operation is '/'", () => {
+		const valueLeft = new Value("valueLeft", 10, null, "");
+		const valueRight = new Value("valueRight", 2, null, "");
+		const op = "/";
+		const assgn = "f";
 
-	//     const result = calculateValue(valueLeft, valueRight, op, assgn);
+		const result = calculateValue(valueLeft, valueRight, op, assgn);
 
-	//     expect(result).toEqual({ number: 5 });
-	// });
-
-	// it("should return the remainder of two values when the operation is '%'", () => {
-	//     const valueLeft: Value = { number: 10 };
-	//     const valueRight: Value = { number: 3 };
-	//     const op = "%";
-	//     const assgn = "=";
-
-	//     const result = calculateValue(valueLeft, valueRight, op, assgn);
-
-	//     expect(result).toEqual({ number: 1 });
-	// });
+		expect(result).toEqual(new Value("f", 5, [valueLeft, valueRight], "/"));
+	});
 });
