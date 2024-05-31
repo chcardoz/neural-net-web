@@ -1,149 +1,118 @@
 let acorn = require("acorn");
 import { useState } from "react";
 import {
-	AssignmentExpression,
-	ExpressionStatement,
-	BinaryExpression,
-	Node,
-	Literal,
-	Identifier
+    ExpressionStatement,
+    BinaryExpression,
+    Node,
+    Literal,
+    Identifier,
 } from "acorn";
 import { Value } from "@/lib/Value";
-import { calculateValue } from "@/lib/calculateValue";
+import { calculateNameString, calculateValue } from "@/lib/calculateValue";
 import { v4 as uuidv4 } from "uuid";
+import {
+    isBinaryExpression,
+    isExpressionStatement,
+    isIdentifier,
+    isLiteral,
+} from "./utilities";
 
 type ASTAnalyzerReturnType = {
-	message: string;
-	handleMessageChange: (e: any) => void;
-	parseResult: Node | null;
-	declaredIdentifiers: Value[];
-	finalValue: Value | undefined;
+    message: string;
+    handleMessageChange: (e: any) => void;
+    parseResult: Node | null;
+    identifierMap: { [key: string]: Value };
+    finalValue: Value | undefined;
 };
 
 const useASTAnalyzer = (): ASTAnalyzerReturnType => {
-	const [message, setMessage] = useState<string>("");
-	const [parseResult, setParseResult] = useState<Node | null>(null);
-	const [declaredIdentifiers, setDeclaredIdentifiers] = useState<Value[]>([]);
-	const [finalValue, setFinalValue] = useState<Value>();
-	let _finalValue: Value = new Value("", 0, null, "");
-	let _declaredIdentifiers: Value[] = [];
+    const [message, setMessage] = useState<string>("");
+    const [parseResult, setParseResult] = useState<Node | null>(null);
+    const [identifierMap, setIdentifierMap] = useState<{
+        [key: string]: Value;
+    }>({});
+    const [finalValue, setFinalValue] = useState<Value>();
 
-	const handleMessageChange = (e: any) => {
-		setMessage(e.target.value);
-		console.log(
-			"Declared Identifiers before calling Analyze:",
-			_declaredIdentifiers
-		);
-		console.log("Final value before calling Analyze:", _finalValue);
+    const handleMessageChange = (e: any) => {
+        setMessage(e.target.value);
+        analyzeCode(e.target.value);
+    };
 
-		analyzeCode(e.target.value);
-		setDeclaredIdentifiers(_declaredIdentifiers);
-		setFinalValue(_finalValue);
-	};
+    const traverse_with_recursion = (
+        node: Node,
+        idMap: { [key: string]: Value }
+    ): Value => {
+        let value = new Value(uuidv4(), "", 1, null, "");
+        if (isExpressionStatement(node)) {
+            let exprNode = node as ExpressionStatement;
+            value = traverse_with_recursion(exprNode.expression, idMap);
+        } else if (isBinaryExpression(node)) {
+            let binaryNode = node as BinaryExpression;
+            let isEqualsOperator = String(binaryNode.operator) === "=";
+            let leftVal = traverse_with_recursion(binaryNode.left, idMap);
+            let rightVal = traverse_with_recursion(binaryNode.right, idMap);
+            let idString = uuidv4();
 
-	const traverse = (node: any) => {
-		const exprNode = node as ExpressionStatement;
-		if (exprNode.expression == null) return;
-		const assignmentExpr = exprNode.expression as AssignmentExpression;
-		if (assignmentExpr.type != "AssignmentExpression") return;
+            value = new Value(
+                idString,
+                isEqualsOperator
+                    ? (binaryNode.left as Identifier).name
+                    : calculateNameString(
+                          leftVal,
+                          rightVal,
+                          binaryNode.operator
+                      ),
+                calculateValue(leftVal, rightVal, binaryNode.operator),
+                isEqualsOperator ? [rightVal] : [leftVal, rightVal],
+                binaryNode.operator
+            );
+            if (isEqualsOperator) idMap[value.name] = value;
+        } else if (isLiteral(node)) {
+            let literalNode = node as Literal;
+            value = new Value(
+                uuidv4(),
+                String(literalNode.raw),
+                Number(literalNode.value),
+                null,
+                ""
+            );
+        } else if (isIdentifier(node)) {
+            let identifierNode = node as Identifier;
+            if (idMap[identifierNode.name]) {
+                value = idMap[identifierNode.name];
+            }
+        }
+        return value;
+    };
 
-		if (assignmentExpr.right.type === "BinaryExpression") {
-			const binaryExpr = assignmentExpr.right as BinaryExpression;
-			let leftNode = assignmentExpr.left as Identifier;
-			_finalValue = binaryRecurse(binaryExpr, leftNode.name);
-		} else {
-			if (
-				assignmentExpr.left.type === "Identifier" &&
-				assignmentExpr.right.type === "Literal"
-			) {
-				const leftNode = assignmentExpr.left as Identifier;
-				const rightNode = assignmentExpr.right as Literal;
-				console.log(
-					"Declared Identifiers when encountering a=1 or a=b:",
-					_declaredIdentifiers
-				);
-				console.log("Final value at this time:", _finalValue);
+    const analyzeCode = (code: string) => {
+        try {
+            const parsed = acorn.parse(code, { ecmaVersion: 2020 });
+            const newIdentifierMap: { [key: string]: Value } = {};
+            let finalVal: Value | undefined;
 
-				_declaredIdentifiers.push(
-					new Value(leftNode.name, Number(rightNode.value), null, "=")
-				);
+            parsed.body.forEach((node: Node) => {
+                finalVal = traverse_with_recursion(node, newIdentifierMap);
+            });
 
-				console.log(
-					"Declared Identifiers after pushing a=1 or a=b:",
-					_declaredIdentifiers
-				);
-				console.log("Final value at this time:", _finalValue);
-			}
-		}
-	};
+            setParseResult(parsed);
+            setIdentifierMap(newIdentifierMap);
+            setFinalValue(finalVal);
+        } catch (e: any) {
+            console.log("Invalid JavaScript code: ", e);
+            setParseResult(null);
+            setIdentifierMap({});
+            setFinalValue(undefined);
+        }
+    };
 
-	const binaryRecurse = (node: BinaryExpression, assgn: string): Value => {
-		let value: Value;
-		if (node.left && node.right) {
-			const valLeft = binaryRecurse(node.left as BinaryExpression, uuidv4());
-			const valRight = binaryRecurse(node.right as BinaryExpression, uuidv4());
-			value = calculateValue(valLeft, valRight, node.operator, assgn);
-		} else {
-			let newNode = node as Node;
-			if (newNode.type === "Literal") {
-				const literalNode = newNode as Literal;
-				value = new Value(
-					String(literalNode.raw),
-					Number(literalNode.value),
-					null,
-					""
-				);
-			} else if (newNode.type === "Identifier") {
-				const identifierNode = newNode as Identifier;
-				console.log(
-					"Declared Identifiers when a new identifier node has been found:",
-					_declaredIdentifiers
-				);
-				console.log("Final value at this time:", _finalValue);
-
-				const found = _declaredIdentifiers.find(
-					(identifier) => identifier.name == identifierNode.name
-				);
-				if (found != undefined) value = found;
-				else
-					throw new Error(
-						`Cannot have undefined identifiers, please define ${identifierNode.name} before using it`
-					);
-			} else {
-				throw new Error(`Unsupported node type: ${node.type}`);
-			}
-		}
-
-		console.log(
-			"Declared Identifiers when binary recursion has finished:",
-			_declaredIdentifiers
-		);
-		console.log("Final value at this time:", _finalValue);
-		console.log("Value:", value);
-		return value;
-	};
-
-	const analyzeCode = (code: string) => {
-		try {
-			const parsed = acorn.parse(code, { ecmaVersion: 2020 });
-			parsed.body.forEach((node: Node) => traverse(node));
-			setParseResult(parsed);
-		} catch (e: any) {
-			console.log("Invalid JavaScript code: ", e);
-			setParseResult(null);
-		}
-	};
-
-	return {
-		message,
-		handleMessageChange,
-		parseResult,
-		declaredIdentifiers,
-		finalValue
-	};
+    return {
+        message,
+        handleMessageChange,
+        parseResult,
+        identifierMap,
+        finalValue,
+    };
 };
 
 export default useASTAnalyzer;
-// FIXME : Check if all node are being added to the list of declared identifiers
-// FIXME : Account for rewriting values
-// TODO : Hashmap implementation for declared identifiers (or better data structure: Heaps? More into optimzation.)

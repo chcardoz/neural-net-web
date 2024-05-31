@@ -18,42 +18,47 @@ import { GraphData, GraphLink, GraphNode } from "@/lib/types";
 
 // Default graph data
 type ForceDirectedGraphProps = {
-	finalValue: Value | undefined;
+    finalValue: Value | undefined;
 };
 
 // Extending the GraphNode to conform to D3's SimulationNodeDatum
 interface ExtendedGraphNode extends d3.SimulationNodeDatum {
-	id: string;
-	group: number;
+    id: string;
+    group: number;
+    name: string;
 }
 
 interface ExtendedGraphLink extends d3.SimulationLinkDatum<ExtendedGraphNode> {
-	value: number;
+    value: number;
 }
 
 interface d3GraphDatum {
-	nodes: d3.SimulationNodeDatum[];
-	links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
+    nodes: d3.SimulationNodeDatum[];
+    links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
 }
 
 const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
-	if (!finalValue) return { nodes: [], links: [] };
+    if (!finalValue) return { nodes: [], links: [] };
 
-	const nodes: ExtendedGraphNode[] = [];
-	const links: ExtendedGraphLink[] = [];
+    const nodes: ExtendedGraphNode[] = [];
+    const links: ExtendedGraphLink[] = [];
 
-	const traverse = (val: Value, group: number) => {
-		nodes.push({ id: val.name, group });
-		if (val.children) {
-			val.children.forEach((child) => {
-				links.push({ source: val.name, target: child.name, value: 1 });
-				traverse(child, group + 1);
-			});
-		}
-	};
+    const traverse = (val: Value, group: number) => {
+        nodes.push({ id: val.id, group, name: val.name });
+        if (val.children) {
+            val.children.forEach((child) => {
+                links.push({
+                    source: val.id,
+                    target: child.id,
+                    value: val.value,
+                });
+                traverse(child, group + 1);
+            });
+        }
+    };
 
-	traverse(finalValue, 1);
-	return { nodes, links };
+    traverse(finalValue, 1);
+    return { nodes, links };
 };
 
 /**
@@ -63,116 +68,115 @@ const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
  * @returns {JSX.Element} - ForceDirectedGraph component
  */
 const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
-	finalValue
+    finalValue,
 }) => {
-	const svgRef = useRef<SVGSVGElement>(null);
-	const [graphData, setGraphData] = useState<d3GraphDatum>({
-		nodes: [],
-		links: []
-	});
+    const svgRef = useRef<SVGSVGElement>(null);
+    const [graphData, setGraphData] = useState<d3GraphDatum>({
+        nodes: [],
+        links: [],
+    });
 
-	useEffect(() => {
-		setGraphData(buildGraphData(finalValue));
-	}, [finalValue]);
+    useEffect(() => {
+        setGraphData(buildGraphData(finalValue));
+    }, [finalValue]);
 
-	useEffect(() => {
-		const width = 928;
-		const height = 600;
-		const color = d3.scaleOrdinal(d3.schemeCategory10);
+    useEffect(() => {
+        const width = 928;
+        const height = 600;
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-		const svg = d3
-			.select(svgRef.current!)
-			.attr("viewBox", `0 0 ${width} ${height}`)
-			.attr("preserveAspectRatio", "xMidYMid meet")
-			.attr("style", "width: 100%; height: 100%;");
+        const svg = d3
+            .select(svgRef.current!)
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .attr("preserveAspectRatio", "xMidYMid meet")
+            .attr("style", "width: 100%; height: 100%;");
 
-		svg.selectAll("*").remove(); // Clear previous SVG contents
+        svg.selectAll("*").remove(); // Clear previous SVG contents
 
-		// initiliaze simulation
-		const simulation = d3
-			.forceSimulation(graphData.nodes)
-			.force(
-				"link",
-				d3
-					.forceLink(graphData.links)
-					.id((d: any) => d.id)
-					.distance(100)
-			)
-			.force("charge", d3.forceManyBody().strength(-350))
-			.force("center", d3.forceCenter(width / 2, height / 2))
-			.on("tick", ticked);
+        // initiliaze simulation
+        const simulation = d3
+            .forceSimulation(graphData.nodes)
+            .force(
+                "link",
+                d3
+                    .forceLink(graphData.links)
+                    .id((d: any) => d.id)
+                    .distance(3)
+            )
+            .force("charge", d3.forceManyBody().strength(-100))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .on("tick", ticked);
 
-		const link = svg
-			.append("g")
-			.attr("stroke", "#999")
-			.attr("stroke-opacity", 0.6)
-			.selectAll("line")
-			.data(graphData.links)
-			.join("line")
-			.attr("stroke-width", (d: any) => Math.sqrt(d.value));
+        const link = svg
+            .append("g")
+            .attr("stroke", "#999")
+            .attr("stroke-opacity", 0.6)
+            .selectAll("line")
+            .data(graphData.links)
+            .join("line")
+            .attr("stroke-width", (d: any) => 0.3 * Math.sqrt(d.value));
 
-		const node = svg
-			.append("g")
-			.attr("stroke", "#000000")
-			.attr("stroke-width", 1.5)
-			.selectAll("g")
-			.data(graphData.nodes)
-			.enter()
-			.append("g")
-			.call(drag(simulation));
+        const node = svg
+            .append("g")
+            .attr("stroke", "#000000")
+            .attr("stroke-width", 1.5)
+            .selectAll("g")
+            .data(graphData.nodes)
+            .enter()
+            .append("g")
+            .call(drag(simulation));
 
-		var cicles = node
-			.append("circle")
-			.attr("r", (d: any) => 50 / d.group)
-			.attr("fill", (d: any) => color(d.group));
+        var cicles = node
+            .append("circle")
+            .attr("r", (d: any) => 20 / d.group)
+            .attr("fill", (d: any) => color(d.group));
 
-		var texts = node.append("text").text((d: any) => d.id);
+        var texts = node.append("text").text((d: any) => d.name);
 
-		function ticked() {
-			link
-				.attr("x1", (d: any) => d.source.x)
-				.attr("y1", (d: any) => d.source.y)
-				.attr("x2", (d: any) => d.target.x)
-				.attr("y2", (d: any) => d.target.y);
+        function ticked() {
+            link.attr("x1", (d: any) => d.source.x)
+                .attr("y1", (d: any) => d.source.y)
+                .attr("x2", (d: any) => d.target.x)
+                .attr("y2", (d: any) => d.target.y);
 
-			node.attr("transform", (d: any) => `translate(${d.x}, ${d.y})`);
-		}
+            node.attr("transform", (d: any) => `translate(${d.x}, ${d.y})`);
+        }
 
-		function drag(simulation: any) {
-			return function (selection: any) {
-				selection.call(
-					d3
-						.drag()
-						.on("start", dragstarted)
-						.on("drag", dragged)
-						.on("end", dragended)
-				);
-			};
-		}
+        function drag(simulation: any) {
+            return function (selection: any) {
+                selection.call(
+                    d3
+                        .drag()
+                        .on("start", dragstarted)
+                        .on("drag", dragged)
+                        .on("end", dragended)
+                );
+            };
+        }
 
-		function dragstarted(event: any, d: any) {
-			if (!event.active) simulation.alphaTarget(0.3).restart();
-			d.fx = d.x;
-			d.fy = d.y;
-		}
+        function dragstarted(event: any, d: any) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
 
-		function dragged(event: any, d: any) {
-			d.fx = event.x;
-			d.fy = event.y;
-		}
+        function dragged(event: any, d: any) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
 
-		function dragended(event: any, d: any) {
-			if (!event.active) simulation.alphaTarget(0);
-			d.fx = null;
-			d.fy = null;
-		}
+        function dragended(event: any, d: any) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
 
-		return () => {
-			simulation.stop();
-		};
-	}, [graphData]);
+        return () => {
+            simulation.stop();
+        };
+    }, [graphData]);
 
-	return <svg ref={svgRef}></svg>;
+    return <svg ref={svgRef}></svg>;
 };
 
 export default ForceDirectedGraph;
