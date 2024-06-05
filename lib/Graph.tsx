@@ -103,7 +103,7 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
                     .id((d: any) => d.id)
                     .distance(3)
             )
-            .force("charge", d3.forceManyBody().strength(-100))
+            .force("charge", d3.forceManyBody().strength(-200))
             .force("center", d3.forceCenter(width / 2, height / 2))
             .on("tick", ticked);
 
@@ -184,3 +184,7 @@ export default ForceDirectedGraph;
 // possible fixes:
 //  FIXME : stops at the first binary statement.
 // uniform the id system
+// TODO: Scrolling feature in graph area
+// TODO: Click to center the graph at the center of mass
+// FIXME: Investigate the flyign off objects
+// TODO: Graph dynamics need to be stable
