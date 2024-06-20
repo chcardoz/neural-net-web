@@ -42,7 +42,7 @@ class Layer {
     }
 }
 
-class MLP {
+export default class Network {
     layers: Layer[];
 
     constructor(nin: number, nouts: number[]) {
