@@ -28,4 +28,43 @@ export class Value {
         this.children = children;
         this.op = op;
     }
+
+    /**
+     * Adds two Value objects.
+     * @param {Value} other - The other Value to add.
+     * @returns {Value} The result of the addition.
+     */
+    add(other: Value): Value {
+        return new Value(
+            this.id + other.id,
+            `${this.name} + ${other.name}`,
+            this.value + other.value,
+            [this, other],
+            "+"
+        );
+    }
+
+    /**
+     * Multiplies two Value objects.
+     * @param {Value} other - The other Value to multiply.
+     * @returns {Value} The result of the multiplication.
+     */
+    multiply(other: Value): Value {
+        return new Value(
+            this.id + other.id,
+            `${this.name} * ${other.name}`,
+            this.value * other.value,
+            [this, other],
+            "*"
+        );
+    }
+
+    /**
+     * Applies the tanh function to the Value.
+     * @returns {Value} The result of the tanh function.
+     */
+    tanh(): Value {
+        const t = Math.tanh(this.value);
+        return new Value(this.id, `tanh(${this.name})`, t, [this], "tanh");
+    }
 }
