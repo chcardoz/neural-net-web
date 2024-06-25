@@ -16,43 +16,54 @@ const Home: React.FC = () => {
         console.log("change", newValue);
     }
 
+    function toggleCollapse() {
+        setIsCollapsed(!isCollapsed);
+    }
+
     return (
         <>
             <Nav />
-            <Draggable handle=".handle">
-                <div className="relative z-50 w-full max-w-full">
-                    <div className="handle flex justify-between items-center p-2 cursor-move">
-                        <span>Editor</span>
-                        <button
-                            onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="text-lg  bg-black text-white focus:outline-none"
-                        >
-                            {isCollapsed ? "+" : "-"}
-                        </button>
+            <div className="relative z-10 shadow-lg w-full max-w-full bg-black">
+                <Draggable handle=".handle">
+                    <div className="flex flex-col">
+                        {
+                            <ResizableBox
+                                width={500}
+                                height={800}
+                                minConstraints={[300, 200]}
+                                maxConstraints={[800, 600]}
+                                className="w-full rounded-lg shadow-lg"
+                            >
+                                <div className="flex justify-between items-center bg-gray-200 p-2 handle">
+                                    {" "}
+                                    <p>Drag Bar</p>
+                                    <button
+                                        className="text-xs p-1"
+                                        onClick={toggleCollapse}
+                                    >
+                                        Button
+                                    </button>
+                                </div>
+                                {!isCollapsed && (
+                                    <div className="border border-gray-300 bg-white h-full">
+                                        <AceEditor
+                                            mode="javascript"
+                                            theme="monokai"
+                                            onChange={onChange}
+                                            name="Editor"
+                                            width="100%"
+                                            height="100%"
+                                            editorProps={{
+                                                $blockScrolling: true,
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </ResizableBox>
+                        }
                     </div>
-                    {!isCollapsed && (
-                        <ResizableBox
-                            width={500}
-                            height={400}
-                            minConstraints={[300, 200]}
-                            maxConstraints={[800, 600]}
-                            className="w-full"
-                        >
-                            <div className="border border-gray-300 bg-white h-full">
-                                <AceEditor
-                                    mode="javascript"
-                                    theme="monokai"
-                                    onChange={onChange}
-                                    name="Editor"
-                                    width="100%"
-                                    height="100%"
-                                    editorProps={{ $blockScrolling: true }}
-                                />
-                            </div>
-                        </ResizableBox>
-                    )}
-                </div>
-            </Draggable>
+                </Draggable>
+            </div>
         </>
     );
 };
