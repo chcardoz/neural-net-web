@@ -10,11 +10,13 @@
 		"test": "jest"
 	},
 	"dependencies": {
+		"@fortawesome/fontawesome-svg-core": "^6.5.2",
 		"@types/d3": "^7.4.3",
 		"ace-builds": "^1.35.0",
 		"acorn": "^8.11.3",
 		"d3": "^7.9.0",
 		"lodash.debounce": "^4.0.8",
+		"material-icons": "^1.13.12",
 		"next": "14.2.3",
 		"react": "^18",
 		"react-ace-builds": "^7.4.1",
