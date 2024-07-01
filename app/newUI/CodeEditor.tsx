@@ -9,7 +9,7 @@ import Draggable from "react-draggable";
 import "react-resizable/css/styles.css";
 import "material-icons/iconfont/material-icons.css";
 
-function CodeEditor() {
+function CodeEditor(props: any) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [resizeWidth, setResizeWidth] = useState(400);
     const [resizeHeight, setResizeHeight] = useState(400);
@@ -24,7 +24,7 @@ function CodeEditor() {
 
     return (
         <Draggable handle=".handle">
-            <div>
+            <div className={props.style}>
                 <div
                     className="flex justify-between items-center bg-gray-200 p-1 handle"
                     style={{
