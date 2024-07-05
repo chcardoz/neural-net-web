@@ -2,11 +2,11 @@
 
 import React from "react";
 import { Canvas } from "@react-three/fiber";
-import Floor from "../../components/Floor";
-import Box from "../../components/Box";
-import LightBulb from "../../components/LightBulb";
-import OrbitControls from "../../components/OrbitControls";
-import Draggable from "../../components/Draggable";
+import Floor from "./Floor";
+import Box from "./Box";
+import LightBulb from "./LightBulb";
+import OrbitControls from "./OrbitControls";
+import Draggable from "./Draggable";
 
 const ThreeDGraph: React.FC = () => {
     return (

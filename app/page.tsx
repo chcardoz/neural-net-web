@@ -1,6 +1,6 @@
 "use client";
 import useASTAnalyzer from "@/lib/useAstAnalyzer";
-import ForceDirectedGraph from "@/lib/Graph";
+import ForceDirectedGraph from "@/components/Graph/Graph";
 import { useCallback, useEffect } from "react";
 import debounce from "lodash.debounce";
 
