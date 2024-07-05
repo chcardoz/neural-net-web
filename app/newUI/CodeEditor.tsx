@@ -9,13 +9,13 @@ import Draggable from "react-draggable";
 import "react-resizable/css/styles.css";
 import "material-icons/iconfont/material-icons.css";
 
-function CodeEditor(props: any) {
+function CodeEditor() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [resizeWidth, setResizeWidth] = useState(400);
     const [resizeHeight, setResizeHeight] = useState(400);
 
     function onChange(newValue: any) {
-        console.log("change", newValue);
+        console.log(newValue);
     }
 
     function toggleCollapse() {
@@ -24,7 +24,7 @@ function CodeEditor(props: any) {
 
     return (
         <Draggable handle=".handle">
-            <div className={props.style}>
+            <div className="inline-block relative z-20">
                 <div
                     className="flex justify-between items-center bg-gray-200 p-1 handle"
                     style={{
@@ -50,25 +50,25 @@ function CodeEditor(props: any) {
                         )}
                     </button>
                 </div>
-                <ResizableBox
-                    width={400}
-                    height={400}
-                    minConstraints={[300, 200]}
-                    maxConstraints={[800, 600]}
-                    onResize={(e, data) => {
-                        setResizeWidth(data.size.width);
-                        setResizeHeight(data.size.height);
-                    }}
-                    style={{
-                        borderRadius: "0 0 1rem 1rem",
-                        boxShadow:
-                            "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-                        overflow: "hidden",
-                        border: "1px solid black",
-                        visibility: isCollapsed ? "hidden" : "visible",
-                    }}
-                >
-                    {!isCollapsed && (
+                {!isCollapsed && (
+                    <ResizableBox
+                        width={resizeWidth}
+                        height={resizeHeight}
+                        minConstraints={[300, 200]}
+                        maxConstraints={[800, 600]}
+                        onResize={(e, data) => {
+                            setResizeWidth(data.size.width);
+                            setResizeHeight(data.size.height);
+                        }}
+                        style={{
+                            borderRadius: "0 0 1rem 1rem",
+                            boxShadow:
+                                "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+                            overflow: "hidden",
+                            border: "1px solid black",
+                            visibility: isCollapsed ? "hidden" : "visible",
+                        }}
+                    >
                         <AceEditor
                             mode="javascript"
                             theme="monokai"
@@ -80,8 +80,8 @@ function CodeEditor(props: any) {
                                 $blockScrolling: true,
                             }}
                         />
-                    )}
-                </ResizableBox>
+                    </ResizableBox>
+                )}
             </div>
         </Draggable>
     );

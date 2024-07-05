@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import css from "../../styles/3DGraphing.module.css";
 import { Canvas } from "@react-three/fiber";
 import Floor from "../../components/Floor";
 import Box from "../../components/Box";
@@ -11,10 +10,10 @@ import Draggable from "../../components/Draggable";
 
 const ThreeDGraph: React.FC = () => {
     return (
-        <div className={css.scene}>
+        <div className="w-screen h-screen absolute inset-0">
             <Canvas
                 shadows
-                className={css.canvas}
+                className="bg-black"
                 camera={{
                     position: [-6, 7, 7],
                 }}

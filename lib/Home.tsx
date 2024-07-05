@@ -9,9 +9,9 @@ const Home: React.FC = () => {
     return (
         <>
             <Nav />
-            <div className="relative w-full h-screen bg-red-500">
+            <div className="relative">
+                <CodeEditor />
                 <ThreeDGraph />
-                <CodeEditor style="absolute top-0 left-0 z-10" />
             </div>
         </>
     );
