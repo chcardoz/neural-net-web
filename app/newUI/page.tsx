@@ -1,16 +1,20 @@
+"use Client";
+
 import React, { useState } from "react";
-import Nav from "@/components/Graph/Nav";
+import Nav from "@/components/Navbar/Nav";
 import CodeEditor from "@/components/CodeEditor/CodeEditor";
 import ThreeDGraph from "@/components/Graph/ThreeDGraph";
+import SimpleGraph from "@/components/ThreeDGraph/SimpleGraph";
 
 export default function HomePage() {
     return (
         <>
             <Nav />
-            <div className="relative">
+            {/* <div className="relative">
                 <CodeEditor />
                 <ThreeDGraph />
-            </div>
+            </div> */}
+            <SimpleGraph />
         </>
     );
 }
