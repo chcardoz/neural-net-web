@@ -5,6 +5,7 @@ import Nav from "@/components/Navbar/Nav";
 import CodeEditor from "@/components/CodeEditor/CodeEditor";
 import ThreeDGraph from "@/components/Graph/ThreeDGraph";
 import SimpleGraph from "@/components/ThreeDGraph/SimpleGraph";
+import VerySimpleGraph from "@/components/ThreeDGraph/VerySimpleGraph";
 
 export default function HomePage() {
     return (
@@ -14,7 +15,8 @@ export default function HomePage() {
                 <CodeEditor />
                 <ThreeDGraph />
             </div> */}
-            <SimpleGraph />
+            {/* <SimpleGraph /> */}
+            <VerySimpleGraph />
         </>
     );
 }

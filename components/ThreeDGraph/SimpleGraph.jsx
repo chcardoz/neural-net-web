@@ -10,15 +10,15 @@ import "../../lib/Label.js"; // Make sure to include the path to Label.js
 import "../../lib/ObjectSelection.js";
 
 const SimpleGraph = ({
-    layout = "3d",
+    layout = "2d",
     showStats = false,
-    showInfo = true,
+    showInfo = false,
     showLabels = false,
-    selection = true,
+    selection = false,
     limit = 10,
-    numNodes = 50,
-    numEdges = 10,
-    graphLayout = { attraction: 5, repulsion: 0.5 },
+    numNodes = 10,
+    numEdges = 9,
+    graphLayout = {},
 }) => {
     const containerRef = useRef();
 
