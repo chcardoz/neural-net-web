@@ -1,4 +1,5 @@
 import {
+    ArrayExpression,
     BinaryExpression,
     ExpressionStatement,
     Identifier,
@@ -25,4 +26,8 @@ export const isExpressionStatement = (
     node: Node
 ): node is ExpressionStatement => {
     return (node as ExpressionStatement).expression !== undefined;
+};
+
+export const isArrayExpression = (node: Node): node is ArrayExpression => {
+    return (node as ArrayExpression).elements !== undefined;
 };
