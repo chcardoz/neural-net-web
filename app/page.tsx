@@ -4,6 +4,10 @@ import ForceDirectedGraph from "@/components/Graph/Graph";
 import { useCallback, useEffect } from "react";
 import debounce from "lodash.debounce";
 
+import React, { useState } from "react";
+import Nav from "@/components/Navbar/Nav";
+import CodeEditor from "@/components/CodeEditor/CodeEditor";
+
 /**
  * Renders the Home component.
  *
@@ -39,29 +43,14 @@ export default function Home() {
     }, [identifierMap, finalValue]);
 
     return (
-        <div className="flex h-screen">
-            <div className="w-1/4 p-4">
-                <textarea
-                    value={message}
-                    onChange={handleMessageChange}
-                    className="w-full h-1/2 p-2 pl-4 rounded border border-gray-400 resize-none text-black"
-                    placeholder="Type your message here"
+        <div className="h-screen w-screen">
+            <Nav />
+            <div className=" relative h-full">
+                <CodeEditor
+                    message={message}
+                    handleMessageChange={handleMessageChange}
                 />
-                <div
-                    className="bg-gray-200 p-2 rounded text-black overflow-auto mt-4"
-                    style={{ height: "50%" }}
-                >
-                    <pre>
-                        {parseResult
-                            ? JSON.stringify(parseResult, null, 2)
-                            : "Invalid JavaScript code"}
-                    </pre>
-                </div>
-            </div>
-            <div className="flex-1 p-4">
-                <div className="bg-white p-2 rounded text-black w-full h-full flex items-center justify-center">
-                    <ForceDirectedGraph finalValue={finalValue} />
-                </div>
+                <ForceDirectedGraph finalValue={finalValue} />
             </div>
         </div>
     );

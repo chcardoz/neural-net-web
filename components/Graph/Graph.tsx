@@ -89,7 +89,7 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             .select(svgRef.current!)
             .attr("viewBox", `0 0 ${width} ${height}`)
             .attr("preserveAspectRatio", "xMidYMid meet")
-            .attr("style", "width: 100%; height: 100%;");
+            .attr("style", "width: 100%; height: 100%; color: white");
 
         svg.selectAll("*").remove(); // Clear previous SVG contents
 
@@ -101,9 +101,9 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
                 d3
                     .forceLink(graphData.links)
                     .id((d: any) => d.id)
-                    .distance(3)
+                    .distance(5)
             )
-            .force("charge", d3.forceManyBody().strength(-200))
+            .force("charge", d3.forceManyBody().strength(-600))
             .force("center", d3.forceCenter(width / 2, height / 2))
             .on("tick", ticked);
 
@@ -176,7 +176,12 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
         };
     }, [graphData]);
 
-    return <svg ref={svgRef}></svg>;
+    return (
+        <svg
+            className="bg-black absolute top-0 left-0 z-10 h-full w-full"
+            ref={svgRef}
+        ></svg>
+    );
 };
 
 export default ForceDirectedGraph;

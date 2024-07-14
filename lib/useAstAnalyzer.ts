@@ -33,9 +33,9 @@ const useASTAnalyzer = (): ASTAnalyzerReturnType => {
     }>({});
     const [finalValue, setFinalValue] = useState<Value>();
 
-    const handleMessageChange = (e: any) => {
-        setMessage(e.target.value);
-        analyzeCode(e.target.value);
+    const handleMessageChange = (text: any) => {
+        setMessage(text);
+        analyzeCode(text);
     };
 
     const traverse_with_recursion = (

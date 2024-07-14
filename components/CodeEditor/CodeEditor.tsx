@@ -9,13 +9,14 @@ import Draggable from "react-draggable";
 import "react-resizable/css/styles.css";
 import "material-icons/iconfont/material-icons.css";
 
-function CodeEditor() {
+function CodeEditor(props: any) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [resizeWidth, setResizeWidth] = useState(400);
     const [resizeHeight, setResizeHeight] = useState(400);
 
     function onChange(newValue: any) {
         console.log(newValue);
+        props.handleMessageChange(newValue);
     }
 
     function toggleCollapse() {
@@ -72,6 +73,7 @@ function CodeEditor() {
                         <AceEditor
                             mode="javascript"
                             theme="monokai"
+                            value={props.message}
                             onChange={onChange}
                             name="Editor"
                             width={"100%"}
