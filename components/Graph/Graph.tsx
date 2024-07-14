@@ -14,6 +14,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 import { Value } from "@/lib/Value";
+import css from "@/style/graph.module.css";
 import { GraphData, GraphLink, GraphNode } from "@/lib/types";
 
 // Default graph data
@@ -26,6 +27,9 @@ interface ExtendedGraphNode extends d3.SimulationNodeDatum {
     id: string;
     group: number;
     name: string;
+    op: string;
+    grad: number;
+    _backward: () => void;
 }
 
 interface ExtendedGraphLink extends d3.SimulationLinkDatum<ExtendedGraphNode> {
@@ -33,7 +37,7 @@ interface ExtendedGraphLink extends d3.SimulationLinkDatum<ExtendedGraphNode> {
 }
 
 interface d3GraphDatum {
-    nodes: d3.SimulationNodeDatum[];
+    nodes: ExtendedGraphNode[];
     links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
 }
 
@@ -44,7 +48,14 @@ const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
     const links: ExtendedGraphLink[] = [];
 
     const traverse = (val: Value, group: number) => {
-        nodes.push({ id: val.id, group, name: val.name });
+        nodes.push({
+            id: val.id,
+            group,
+            name: val.name,
+            op: val.op,
+            grad: val.grad,
+            _backward: val._backward,
+        });
         if (val.children) {
             val.children.forEach((child) => {
                 links.push({
@@ -124,14 +135,78 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             .data(graphData.nodes)
             .enter()
             .append("g")
-            .call(drag(simulation));
+            .call(drag(simulation))
+            .attr("class", css.node)
+            .on("mouseover", function (d) {
+                d3.select(this).raise();
+                d3.select(this).select(".tooltip").style("display", "block");
+                d3.select(this)
+                    .select(".tooltip-text")
+                    .style("display", "block");
+            })
+            .on("mouseout", function (d) {
+                d3.select(this).select(".tooltip").style("display", "none");
+                d3.select(this)
+                    .select(".tooltip-text")
+                    .style("display", "none");
+            })
+            .on("dblclick", function (event, d) {
+                if (d._backward) {
+                    d._backward();
+                    console.log("====================================");
+                    console.log("Backward executed");
+                    console.log(d.grad);
+                    console.log("====================================");
+                }
+            });
 
         var cicles = node
             .append("circle")
             .attr("r", (d: any) => 20 / d.group)
             .attr("fill", (d: any) => color(d.group));
 
-        var texts = node.append("text").text((d: any) => d.name);
+        node.append("text")
+            .text((d: any) => d.name)
+            .attr("text-anchor", "middle")
+            .attr("dy", 5)
+            .attr("fill", "black");
+
+        // Add tooltip
+        node.append("rect")
+            .attr("class", "tooltip")
+            .attr("width", 100)
+            .attr("height", 55)
+            .attr("fill", "white")
+            .attr("stroke", "black")
+            .attr("rx", 10)
+            .attr("ry", 10)
+            .style("display", "none")
+            .attr("x", -50)
+            .attr("y", -70);
+        // .attr("x", function (d) {
+        //     -50;
+        // })
+        // .attr("y", function (d) {
+        //     return d.y! - 70; // Adjust this value to position the tooltip above the node
+        // });
+
+        // Add tooltip text
+        node.append("text")
+            .attr("class", "tooltip-text")
+            .attr("text-anchor", "middle")
+            .attr("dy", -55)
+            .style("font-size", "10px")
+            .style("fill", "black")
+            .style("display", "none")
+            .selectAll("tspan")
+            .data((d: any) => {
+                return [`Name: ${d.name}`, `Op: ${d.op}`, `Grad: ${d.grad}`];
+            })
+            .enter()
+            .append("tspan")
+            .attr("x", 0)
+            .attr("dy", -20) // Adjust as needed for spacing between lines
+            .text((text: string) => text);
 
         function ticked() {
             link.attr("x1", (d: any) => d.source.x)
