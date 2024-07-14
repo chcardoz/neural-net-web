@@ -7,14 +7,14 @@ import GRAPHVIS from "../../lib/graph.js"; // Make sure to include the path to g
 import Layout from "../../lib/force-directed-layout.js"; // Make sure to include the path to layout
 // import Stats from "../../lib/Stats.js"; // If you use Stats.js for FPS box
 // import "../../lib/Label.js"; // Make sure to include the path to Label.js
-// import "../../lib/ObjectSelection.js";
+import "../../lib/ObjectSelection.js";
 
 const VerySimpleGraph = ({
-    layout = "2d",
+    layout = "3d",
     showStats = false,
     showInfo = false,
     showLabels = false,
-    selection = false,
+    selection = true,
     limit = 10,
     numNodes = 10,
     numEdges = 20,
@@ -50,12 +50,90 @@ const VerySimpleGraph = ({
     );
     camera.position.z = 10000;
 
+    const render = () => {
+        if (!graph.layout.finished) {
+            infoText.calc =
+                "<span style='color: red'>Calculating layout...</span>";
+            graph.layout.generate();
+        } else {
+            infoText.calc = "";
+        }
+
+        geometries.forEach((geometry) => {
+            geometry.verticesNeedUpdate = true;
+        });
+
+        if (showLabels) {
+            graph.nodes.forEach((node) => {
+                if (node.data.labelObject !== undefined) {
+                    node.data.labelObject.position.x =
+                        node.data.drawObject.position.x;
+                    node.data.labelObject.position.y =
+                        node.data.drawObject.position.y - 100;
+                    node.data.labelObject.position.z =
+                        node.data.drawObject.position.z;
+                    node.data.labelObject.lookAt(camera.position);
+                } else {
+                    const labelObject =
+                        node.data.title !== undefined
+                            ? new THREE.Label(
+                                  node.data.title,
+                                  node.data.drawObject
+                              )
+                            : new THREE.Label(node.id, node.data.drawObject);
+                    node.data.labelObject = labelObject;
+                    scene.add(node.data.labelObject);
+                }
+            });
+        } else {
+            graph.nodes.forEach((node) => {
+                if (node.data.labelObject !== undefined) {
+                    scene.remove(node.data.labelObject);
+                    node.data.labelObject = undefined;
+                }
+            });
+        }
+
+        if (selection) {
+            objectSelection.render(scene, camera);
+        }
+
+        if (showStats) {
+            stats.update();
+        }
+
+        renderer.render(scene, camera);
+    };
+
+    controls = new TrackballControls(camera, renderer.domElement);
+    controls.rotateSpeed = 0.5;
+    controls.zoomSpeed = 5.2;
+    controls.panSpeed = 1;
+    controls.staticMoving = false;
+    controls.dynamicDampingFactor = 0.3;
+    controls.keys = [65, 83, 68];
+    controls.addEventListener("change", render);
+
     scene = new THREE.Scene();
 
     geometry =
         layout === "3d"
             ? new THREE.SphereGeometry(30)
             : new THREE.BoxGeometry(50, 50, 0);
+
+    if (selection) {
+        objectSelection = new THREE.ObjectSelection({
+            domElement: renderer.domElement,
+            selected: (obj) => {
+                if (obj !== null) {
+                    infoText.select = `Object ${obj.customId}`;
+                } else {
+                    delete infoText.select;
+                }
+            },
+            clicked: (obj) => {},
+        });
+    }
 
     const randomFromTo = (from, to) =>
         Math.floor(Math.random() * (to - from + 1) + from);
