@@ -133,8 +133,8 @@ export class Value {
                     for (const child of v.children) {
                         buildTopo(child);
                     }
-                    topo.push(v);
                 }
+                topo.push(v);
             }
         };
 
@@ -143,6 +143,7 @@ export class Value {
         this.grad = 1.0;
         for (const node of topo.reverse()) {
             node._backward();
+            console.log("grad of " + node.name + " is " + node.grad);
         }
     }
 }

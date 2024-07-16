@@ -15,7 +15,7 @@ import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 import { Value } from "@/lib/Value";
 import css from "@/style/graph.module.css";
-import { GraphData, GraphLink, GraphNode } from "@/lib/types";
+// import { GraphData, GraphLink, GraphNode } from "@/lib/types";
 
 // Default graph data
 type ForceDirectedGraphProps = {
@@ -29,7 +29,7 @@ interface ExtendedGraphNode extends d3.SimulationNodeDatum {
     name: string;
     op: string;
     grad: number;
-    _backward: () => void;
+    backward: () => void;
 }
 
 interface ExtendedGraphLink extends d3.SimulationLinkDatum<ExtendedGraphNode> {
@@ -50,11 +50,11 @@ const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
     const traverse = (val: Value, group: number) => {
         nodes.push({
             id: val.id,
-            group,
+            group: group,
             name: val.name,
             op: val.op,
             grad: val.grad,
-            _backward: val._backward,
+            backward: val.backward,
         });
         if (val.children) {
             val.children.forEach((child) => {
@@ -151,13 +151,10 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
                     .style("display", "none");
             })
             .on("dblclick", function (event, d) {
-                if (d._backward) {
-                    d._backward();
-                    console.log("====================================");
-                    console.log("Backward executed");
-                    console.log(d.grad);
-                    console.log("====================================");
-                }
+                console.log("====================================");
+                d.backward();
+                console.log("Backward executed");
+                console.log("====================================");
             });
 
         var cicles = node
@@ -165,11 +162,11 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             .attr("r", (d: any) => 20 / d.group)
             .attr("fill", (d: any) => color(d.group));
 
-        node.append("text")
-            .text((d: any) => d.name)
-            .attr("text-anchor", "middle")
-            .attr("dy", 5)
-            .attr("fill", "black");
+        // node.append("text")
+        //     .text((d: any) => d.name)
+        //     .attr("text-anchor", "middle")
+        //     .attr("dy", 5)
+        //     .attr("fill", "black");
 
         // Add tooltip
         node.append("rect")
