@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 /**
  * Represents a value.
  */
@@ -12,6 +14,7 @@ export class Value {
 
     /**
      * Constructs a new Value object.
+     * @param {string} id - The unique identifier of the value.
      * @param {string} name - The name of the value.
      * @param {number} value - The numeric value.
      * @param {Array<Value>} children - The children values.
@@ -44,7 +47,7 @@ export class Value {
      */
     add(other: Value): Value {
         let out = new Value(
-            this.id + other.id,
+            uuidv4(),
             `${this.name} + ${other.name}`,
             this.value + other.value,
             [this, other],
@@ -70,7 +73,7 @@ export class Value {
      */
     subtract(other: Value): Value {
         let out = new Value(
-            this.id + other.id,
+            uuidv4(),
             `${this.name} - ${other.name}`,
             this.value - other.value,
             [this, other],
@@ -93,7 +96,7 @@ export class Value {
      */
     multiply(other: Value): Value {
         let out = new Value(
-            this.id + other.id,
+            uuidv4(),
             `${this.name} * ${other.name}`,
             this.value * other.value,
             [this, other],
