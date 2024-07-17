@@ -24,12 +24,13 @@ type ForceDirectedGraphProps = {
 
 // Extending the GraphNode to conform to D3's SimulationNodeDatum
 interface ExtendedGraphNode extends d3.SimulationNodeDatum {
-    id: string;
+    // id: string;
     group: number;
-    name: string;
-    op: string;
-    grad: number;
-    backward: () => void;
+    // name: string;
+    // op: string;
+    // grad: number;
+    // backward: () => void;
+    value: Value;
 }
 
 interface ExtendedGraphLink extends d3.SimulationLinkDatum<ExtendedGraphNode> {
@@ -49,12 +50,13 @@ const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
 
     const traverse = (val: Value, group: number) => {
         nodes.push({
-            id: val.id,
+            // id: val.id,
             group: group,
-            name: val.name,
-            op: val.op,
-            grad: val.grad,
-            backward: val.backward,
+            // name: val.name,
+            // op: val.op,
+            // grad: val.grad,
+            // backward: val.backward,
+            value: val,
         });
         if (val.children) {
             val.children.forEach((child) => {
@@ -111,7 +113,7 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
                 "link",
                 d3
                     .forceLink(graphData.links)
-                    .id((d: any) => d.id)
+                    .id((d: any) => d.value.id)
                     .distance(5)
             )
             .force("charge", d3.forceManyBody().strength(-600))
@@ -125,7 +127,7 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             .selectAll("line")
             .data(graphData.links)
             .join("line")
-            .attr("stroke-width", (d: any) => 0.3 * Math.sqrt(d.value));
+            .attr("stroke-width", (d: any) => 0.3 * Math.sqrt(d.value.value));
 
         const node = svg
             .append("g")
@@ -152,7 +154,7 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             })
             .on("dblclick", function (event, d) {
                 console.log("====================================");
-                d.backward();
+                d.value.backward();
                 console.log("Backward executed");
                 console.log("====================================");
             });
@@ -197,7 +199,11 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             .style("display", "none")
             .selectAll("tspan")
             .data((d: any) => {
-                return [`Name: ${d.name}`, `Op: ${d.op}`, `Grad: ${d.grad}`];
+                return [
+                    `Name: ${d.value.name}`,
+                    `Op: ${d.value.op}`,
+                    `Grad: ${d.value.grad}`,
+                ];
             })
             .enter()
             .append("tspan")
@@ -265,3 +271,6 @@ export default ForceDirectedGraph;
 // TODO: Click to center the graph at the center of mass
 // FIXME: Investigate the flyign off objects
 // TODO: Graph dynamics need to be stable
+
+// use the operation from value in ast
+// graph refresh (update) : create a funcntion on a node that uses use's it's children's gradient as input to a checksum function.

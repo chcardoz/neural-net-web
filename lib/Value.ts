@@ -53,8 +53,11 @@ export class Value {
 
         // Define the backward function
         out._backward = () => {
+            console.log("adding backward");
             this.grad += out.grad;
             other.grad += out.grad;
+            console.log("grad of " + this.name + " is " + this.grad);
+            console.log("grad of " + other.name + " is " + other.grad);
         };
 
         return out;
@@ -140,6 +143,11 @@ export class Value {
 
         buildTopo(this);
 
+        console.log(topo);
+
+        for (const node of topo) {
+            node.grad = 0;
+        }
         this.grad = 1.0;
         for (const node of topo.reverse()) {
             node._backward();
