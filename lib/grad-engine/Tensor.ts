@@ -1,4 +1,4 @@
-import { Value } from "./NewValue";
+import { Value } from "./Value";
 
 export class Tensor {
     shape: [number, number];
@@ -10,6 +10,10 @@ export class Tensor {
         }
         this.shape = _shape;
         this.data = _data;
+    }
+
+    __eq__(other: Tensor): Tensor {
+        return other;
     }
 
     __add__(other: Tensor): Tensor {
@@ -102,5 +106,23 @@ export class Tensor {
 
     shapeString(): string {
         return `[${this.shape[0]},${this.shape[1]}]`;
+    }
+
+    __eval__(other: Tensor, _op: string): Tensor {
+        if (_op === "+") {
+            return this.__add__(other);
+        } else if (_op === "-") {
+            return this.__sub__(other);
+        } else if (_op === "*") {
+            return this.__mul__(other);
+        } else if (_op === "ReLU") {
+            return this.relu();
+        } else if (_op === "Tanh") {
+            return this.tanh();
+        } else if (_op === "=") {
+            return this.__eq__(other);
+        } else {
+            throw new Error(`Unsupported operator ${_op}`);
+        }
     }
 }

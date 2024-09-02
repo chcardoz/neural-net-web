@@ -135,10 +135,11 @@ export class Value {
         );
     }
 
-    __eq__(other: Value | number): Value {
+    __eq__(other: Value | number) {
         other =
             other instanceof Value ? other : new Value(other, String(other));
-        return new Value(other.data, this.name, [this, other], "=");
+        this.data = other.data;
+        this.grad = other.grad;
     }
 
     toString(): string {
@@ -149,6 +150,7 @@ export class Value {
         return `${this.data}`;
     }
 
+    // A.__eval__(B,"+") --> A.__add__(B) --> A+B
     __eval__(other: Value, _op: string): Value {
         if (_op === "+") {
             return this.__add__(other);
@@ -163,7 +165,8 @@ export class Value {
         } else if (_op === "Tanh") {
             return this.tanh();
         } else if (_op === "=") {
-            return this.__eq__(other);
+            this.__eq__(other);
+            return this;
         } else {
             throw new Error(`Unsupported operator ${_op}`);
         }

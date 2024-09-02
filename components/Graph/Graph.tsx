@@ -13,13 +13,8 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
-import { Value } from "@/lib/Value";
-import { GraphData, GraphLink, GraphNode } from "@/lib/types";
-
-// Default graph data
-type ForceDirectedGraphProps = {
-    finalValue: Value | undefined;
-};
+import { Tensor } from "@/lib/grad-engine/Tensor";
+import { Value } from "@/lib/grad-engine/Value";
 
 // Extending the GraphNode to conform to D3's SimulationNodeDatum
 interface ExtendedGraphNode extends d3.SimulationNodeDatum {
@@ -37,27 +32,29 @@ interface d3GraphDatum {
     links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
 }
 
-const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
-    if (!finalValue) return { nodes: [], links: [] };
+const buildGraphData = (finalTensor: Tensor): d3GraphDatum => {
+    if (!finalTensor) return { nodes: [], links: [] };
 
     const nodes: ExtendedGraphNode[] = [];
     const links: ExtendedGraphLink[] = [];
 
     const traverse = (val: Value, group: number) => {
         nodes.push({ id: val.id, group, name: val.name });
-        if (val.children) {
-            val.children.forEach((child) => {
+        if (val._prev) {
+            val._prev.forEach((child) => {
                 links.push({
                     source: val.id,
                     target: child.id,
-                    value: val.value,
+                    value: val.data,
                 });
                 traverse(child, group + 1);
             });
         }
     };
 
-    traverse(finalValue, 1);
+    finalTensor.data.forEach((val: Value) => {
+        traverse(val, 1);
+    });
     return { nodes, links };
 };
 
@@ -67,8 +64,8 @@ const buildGraphData = (finalValue: Value | undefined): d3GraphDatum => {
  * @param {Object} props.data - Graph data containing nodes and links
  * @returns {JSX.Element} - ForceDirectedGraph component
  */
-const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
-    finalValue,
+const ForceDirectedGraph: React.FC<{ finalTensor: Tensor }> = ({
+    finalTensor,
 }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const [graphData, setGraphData] = useState<d3GraphDatum>({
@@ -77,8 +74,8 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
     });
 
     useEffect(() => {
-        setGraphData(buildGraphData(finalValue));
-    }, [finalValue]);
+        setGraphData(buildGraphData(finalTensor));
+    }, [finalTensor]);
 
     useEffect(() => {
         const width = 928;
@@ -103,7 +100,7 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
                     .id((d: any) => d.id)
                     .distance(5)
             )
-            .force("charge", d3.forceManyBody().strength(-600))
+            .force("charge", d3.forceManyBody().strength(-100))
             .force("center", d3.forceCenter(width / 2, height / 2))
             .on("tick", ticked);
 
@@ -124,7 +121,20 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             .data(graphData.nodes)
             .enter()
             .append("g")
-            .call(drag(simulation));
+            .call(drag(simulation))
+            .on("mouseover", function (d) {
+                d3.select(this).raise();
+                d3.select(this).select(".tooltip").style("display", "block");
+                d3.select(this)
+                    .select(".tooltip-text")
+                    .style("display", "block");
+            })
+            .on("mouseout", function (d) {
+                d3.select(this).select(".tooltip").style("display", "none");
+                d3.select(this)
+                    .select(".tooltip-text")
+                    .style("display", "none");
+            });
 
         var cicles = node
             .append("circle")
@@ -132,6 +142,43 @@ const ForceDirectedGraph: React.FC<{ finalValue: Value | undefined }> = ({
             .attr("fill", (d: any) => color(d.group));
 
         var texts = node.append("text").text((d: any) => d.name);
+
+        // Add tooltip
+        node.append("rect")
+            .attr("class", "tooltip")
+            .attr("width", 100)
+            .attr("height", 55)
+            .attr("fill", "white")
+            .attr("stroke", "black")
+            .attr("rx", 10)
+            .attr("ry", 10)
+            .style("display", "none")
+            .attr("x", -50)
+            .attr("y", -70);
+        // .attr("x", function (d) {
+        //     -50;
+        // })
+        // .attr("y", function (d) {
+        //     return d.y! - 70; // Adjust this value to position the tooltip above the node
+        // });
+
+        // Add tooltip text
+        node.append("text")
+            .attr("class", "tooltip-text")
+            .attr("text-anchor", "middle")
+            .attr("dy", -55)
+            .style("font-size", "10px")
+            .style("fill", "black")
+            .style("display", "none")
+            .selectAll("tspan")
+            .data((d: any) => {
+                return [`Name: ${d.name}`, `Op: ${d._op}`, `Grad: ${d.grad}`];
+            })
+            .enter()
+            .append("tspan")
+            .attr("x", 0)
+            .attr("dy", -20) // Adjust as needed for spacing between lines
+            .text((text: string) => text);
 
         function ticked() {
             link.attr("x1", (d: any) => d.source.x)
